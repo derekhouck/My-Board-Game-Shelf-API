@@ -1,0 +1,30 @@
+{
+  "name": "my-board-game-shelf-api",
+  "version": "1.0.0",
+  "description": "An Express backend for My Board Game Shelf",
+  "main": "index.js",
+  "scripts": {
+    "test": "nodemon --exec npm run mocha-exit0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/derekhouck/My-Board-Game-Shelf-API.git"
+  },
+  "keywords": [
+    "board",
+    "games",
+    "collection",
+    "search",
+    "filter",
+    "boardgamegeek"
+  ],
+  "author": "Derek Houck",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/derekhouck/My-Board-Game-Shelf-API/issues"
+  },
+  "homepage": "https://github.com/derekhouck/My-Board-Game-Shelf-API#readme",
+  "dependencies": {
+    "express": "^4.16.4"
+  }
+}
