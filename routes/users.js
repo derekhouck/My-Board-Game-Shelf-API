@@ -51,6 +51,24 @@ router.post('/', (req, res, next) => {
     return next(err);
   }
 
+  const sizedFields = {
+    username: { min: 1 }
+  };
+
+  const tooSmallField = Object.keys(sizedFields).find(
+    field => 'min' in sizedFields[field] &&
+      req.body[field].trim().length < sizedFields[field].min
+  );
+
+  if (tooSmallField) {
+    const min = sizedFields[tooSmallField].min;
+    const err = new Error(`Must be at least ${min} characters long`);
+    err.status = 422;
+    err.reason = 'ValidationError';
+    err.location = tooSmallField;
+    return next(err);
+  }
+
   let { username, password, name } = req.body;
 
   return User
