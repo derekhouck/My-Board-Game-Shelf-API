@@ -75,7 +75,19 @@ describe('My Board Game Shelf API - Users', function () {
         });
     });
 
-    it('should reject users with missing password');
+    it('should reject users with missing password', function () {
+      return chai
+        .request(app)
+        .post('/api/users')
+        .send({ username, name })
+        
+        .then(res => {
+          expect(res).to.have.status(422);
+          expect(res.body.reason).to.equal('ValidationError');
+          expect(res.body.message).to.equal('Missing field');
+          expect(res.body.location).to.equal('password');
+        });
+    });
 
     it('should reject users with non-string username');
 
