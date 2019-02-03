@@ -121,7 +121,21 @@ describe('My Board Game Shelf API - Users', function () {
         });
     });
 
-    it('should reject users with non-string name');
+    it('should reject users with non-string name', function () {
+      return chai
+        .request(app)
+        .post('/api/users')
+        .send({ username, password, name: 1234 })
+
+        .then(res => {
+          expect(res).to.have.status(422);
+          expect(res.body.reason).to.equal('ValidationError');
+          expect(res.body.message).to.equal(
+            'Incorrect field type: expected string'
+          );
+          expect(res.body.location).to.equal('name');
+        });
+    });
 
     it('should reject users with non-trimmed username');
 
