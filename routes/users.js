@@ -53,7 +53,7 @@ router.post('/', (req, res, next) => {
 
   const sizedFields = {
     username: { min: 1 },
-    password: { min: 8 }
+    password: { min: 8, max: 72 }
   };
 
   const tooSmallField = Object.keys(sizedFields).find(
@@ -61,12 +61,18 @@ router.post('/', (req, res, next) => {
       req.body[field].trim().length < sizedFields[field].min
   );
 
-  if (tooSmallField) {
-    const min = sizedFields[tooSmallField].min;
-    const err = new Error(`Must be at least ${min} characters long`);
+  const tooLargeField = Object.keys(sizedFields).find(
+    field => 'max' in sizedFields[field] &&
+      req.body[field].trim().length > sizedFields[field].max
+  );
+
+  if (tooSmallField || tooLargeField) {
+    const num = tooSmallField ? sizedFields[tooSmallField].min : sizedFields[tooLargeField].max;
+    const err = new Error('');
     err.status = 422;
     err.reason = 'ValidationError';
-    err.location = tooSmallField;
+    err.message = `Must be at ${tooSmallField ? 'least' : 'most'} ${num} characters long`;
+    err.location = tooSmallField || tooLargeField;
     return next(err);
   }
 
