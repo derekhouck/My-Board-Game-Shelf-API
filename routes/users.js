@@ -18,6 +18,19 @@ router.post('/', (req, res, next) => {
     return next(err);
   }
 
+  const stringFields = ['username'];
+  const nonStringField = stringFields.find(
+    field => field in req.body && typeof req.body[field] !== 'string'
+  );
+
+  if (nonStringField) {
+    const err = new Error('Incorrect field type: expected string');
+    err.status = 422;
+    err.reason = 'ValidationError';
+    err.location = nonStringField;
+    return next(err);
+  }
+
   let { username, password, name } = req.body;
 
   return User

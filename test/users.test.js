@@ -80,7 +80,7 @@ describe('My Board Game Shelf API - Users', function () {
         .request(app)
         .post('/api/users')
         .send({ username, name })
-        
+
         .then(res => {
           expect(res).to.have.status(422);
           expect(res.body.reason).to.equal('ValidationError');
@@ -89,7 +89,21 @@ describe('My Board Game Shelf API - Users', function () {
         });
     });
 
-    it('should reject users with non-string username');
+    it.only('should reject users with non-string username', function () {
+      return chai
+        .request(app)
+        .post('/api/users')
+        .send({ username: 1234, password, name })
+
+        .then(res => {
+          expect(res).to.have.status(422);
+          expect(res.body.reason).to.equal('ValidationError');
+          expect(res.body.message).to.equal(
+            'Incorrect field type: expected string'
+          );
+          expect(res.body.location).to.equal('username');
+        });
+    });
 
     it('should reject users with non-string password');
 
