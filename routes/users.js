@@ -52,7 +52,8 @@ router.post('/', (req, res, next) => {
   }
 
   const sizedFields = {
-    username: { min: 1 }
+    username: { min: 1 },
+    password: { min: 8 }
   };
 
   const tooSmallField = Object.keys(sizedFields).find(

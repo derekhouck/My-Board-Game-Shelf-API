@@ -185,7 +185,21 @@ describe('My Board Game Shelf API - Users', function () {
         });
     });
 
-    it('should reject users with password less than 8 characters');
+    it('should reject users with password less than 8 characters', function () {
+      return chai
+        .request(app)
+        .post('/api/users')
+        .send({ username, password: '1234567', name })
+
+        .then(res => {
+          expect(res).to.have.status(422);
+          expect(res.body.reason).to.equal('ValidationError');
+          expect(res.body.message).to.equal(
+            'Must be at least 8 characters long'
+          );
+          expect(res.body.location).to.equal('password');
+        });
+    });
 
     it('should reject users with password greater than 72 characters');
 
