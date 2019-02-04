@@ -268,6 +268,24 @@ describe('My Board Game Shelf API - Users', function () {
       });
     });
 
-    it('should return an array of users');
+    it('should return an array of users', function () {
+      const userOne = { username, password, name };
+      const userTwo = {
+        username: 'secondUser',
+        password: 'examplePass2',
+        name: 'Second User'
+      };
+      return User
+        .create(userOne, userTwo)
+        .then(() => chai.request(app).get('/api/users'))
+        .then(res => {
+          expect(res).to.have.status(200);
+          expect(res.body).to.be.an('array');
+          expect(res.body).to.have.length(2);
+          res.body.forEach(user => {
+            expect(user).to.have.keys('id', 'username', 'name');
+          });
+        });
+    });
   });
 });
