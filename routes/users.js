@@ -102,4 +102,11 @@ router.post('/', (req, res, next) => {
     });
 });
 
+router.get('/', (req, res, next) => {
+  return User
+    .find()
+    .then(users => res.json(users))
+    .catch(err => next(err));
+});
+
 module.exports = router;

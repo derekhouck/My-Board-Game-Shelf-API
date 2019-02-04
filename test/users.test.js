@@ -260,7 +260,13 @@ describe('My Board Game Shelf API - Users', function () {
   });
 
   describe('GET /api/users', function () {
-    it('should return an empty array initially');
+    it('should return an empty array initially', function () {
+      return chai.request(app).get('/api/users').then(res => {
+        expect(res).to.have.status(200);
+        expect(res.body).to.be.an('array');
+        expect(res.body).to.have.length(0);
+      });
+    });
 
     it('should return an array of users');
   });
