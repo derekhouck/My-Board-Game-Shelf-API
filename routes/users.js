@@ -91,6 +91,12 @@ router.post('/', (req, res, next) => {
       return res.status(201).json(user);
     })
     .catch(err => {
+      if (err.code === 11000) {
+        err = new Error('Username already taken');
+        err.status = 422;
+        err.reason = 'ValidationError';
+        err.location = 'username';
+      }
       next(err);
     });
 });

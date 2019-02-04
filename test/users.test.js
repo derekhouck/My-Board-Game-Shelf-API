@@ -217,7 +217,28 @@ describe('My Board Game Shelf API - Users', function () {
         });
     });
 
-    it('should reject users with a duplicate username');
+    it('should reject users with a duplicate username', function () {
+      return User
+        .create({
+          username,
+          password,
+          name
+        })
+        .then(() => {
+          return chai
+            .request(app)
+            .post('/api/users')
+            .send({ username, password, name });
+        })
+        .then(res => {
+          expect(res).to.have.status(422);
+          expect(res.body.reason).to.equal('ValidationError');
+          expect(res.body.message).to.equal(
+            'Username already taken'
+          );
+          expect(res.body.location).to.equal('username');
+        });
+    });
 
     it('should trim name');
   });
