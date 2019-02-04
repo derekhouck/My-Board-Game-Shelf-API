@@ -3,6 +3,7 @@
 const app = require('../index');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
+const sinon = require('sinon');
 
 const { TEST_DATABASE_URL } = require('../config');
 const { dbConnect, dbDisconnect, dbDrop } = require('../db-mongoose');
@@ -11,6 +12,7 @@ const User = require('../models/user');
 
 const expect = chai.expect;
 chai.use(chaiHttp);
+const sandbox = sinon.createSandbox();
 
 before(function () {
   return dbConnect(TEST_DATABASE_URL);
@@ -285,6 +287,20 @@ describe('My Board Game Shelf API - Users', function () {
           res.body.forEach(user => {
             expect(user).to.have.keys('id', 'username', 'name');
           });
+        });
+    });
+
+    it('should catch errors and respond properly', function () {
+      sandbox.stub(User.schema.options.toJSON, 'transform').throws('FakeError');
+
+      return User
+        .create({ username, password, name })
+        .then(() => chai.request(app).get('/api/users'))
+        .then(res => {
+          expect(res).to.have.status(500);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('Internal Server Error');
         });
     });
   });

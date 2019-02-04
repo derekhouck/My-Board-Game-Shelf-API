@@ -19,10 +19,6 @@ function dbDisconnect() {
   return mongoose.disconnect();
 }
 
-function dbGet() {
-  return mongoose;
-}
-
 function dbDrop() {
   return mongoose.connection.db.dropDatabase();
 }
@@ -30,6 +26,5 @@ function dbDrop() {
 module.exports = {
   dbConnect,
   dbDisconnect,
-  dbGet,
   dbDrop
 };
