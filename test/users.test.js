@@ -240,7 +240,23 @@ describe('My Board Game Shelf API - Users', function () {
         });
     });
 
-    it('should trim name');
+    it('should trim name', function () {
+      return chai
+        .request(app)
+        .post('/api/users')
+        .send({ username, password, name: ` ${name} ` })
+        .then(res => {
+          expect(res).to.have.status(201);
+          expect(res.body).to.be.an('object');
+          expect(res.body).to.have.keys('id', 'username', 'name');
+          expect(res.body.name).to.equal(name);
+          return User.findOne({ username });
+        })
+        .then(user => {
+          expect(user).to.not.be.null;
+          expect(user.name).to.equal(name);
+        });
+    });
   });
 
   describe('GET /api/users', function () {

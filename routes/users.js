@@ -76,7 +76,8 @@ router.post('/', (req, res, next) => {
     return next(err);
   }
 
-  let { username, password, name } = req.body;
+  let { username, password, name = '' } = req.body;
+  name = name.trim();
 
   return User
     .hashPassword(password)
