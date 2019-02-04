@@ -14,18 +14,15 @@ const expect = chai.expect;
 chai.use(chaiHttp);
 const sandbox = sinon.createSandbox();
 
-before(function () {
-  return dbConnect(TEST_DATABASE_URL);
-});
-
-after(function () {
-  return dbDisconnect();
-});
 
 describe('My Board Game Shelf API - Users', function () {
   const username = 'exampleUser';
   const password = 'examplePass';
   const name = 'Example User';
+
+  before(function () {
+    return dbConnect(TEST_DATABASE_URL);
+  });
 
   beforeEach(function () {
     return User.createIndexes();
@@ -33,6 +30,10 @@ describe('My Board Game Shelf API - Users', function () {
 
   afterEach(function () {
     return dbDrop();
+  });
+
+  after(function () {
+    return dbDisconnect();
   });
 
   describe('POST /api/users', function () {
