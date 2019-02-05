@@ -61,15 +61,60 @@ describe('My Board Game Shelf API - Authentication', function () {
         });
     });
 
-    it('should reject requests without credentials');
+    it('should reject requests without credentials', function () {
+      return chai.request(app)
+        .post('/api/login')
+        .send({})
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res.body).to.be.an('object');
+          expect(res.body.message).to.equal('Bad Request');
+        });
+    });
 
-    it('should reject requests with empty string username');
+    it('should reject requests with empty string username', function () {
+      return chai.request(app)
+        .post('/api/login')
+        .send({ username: '', password })
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res.body).to.be.an('object');
+          expect(res.body.message).to.equal('Bad Request');
+        });
+    });
 
-    it('should reject requests with empty string password');
+    it('should reject requests with empty string password', function () {
+      return chai.request(app)
+        .post('/api/login')
+        .send({ username, password: '' })
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res.body).to.be.an('object');
+          expect(res.body.message).to.equal('Bad Request');
+        });
+    });
 
-    it('should reject requests with incorrect username');
+    it('should reject requests with incorrect username', function () {
+      return chai.request(app)
+        .post('/api/login')
+        .send({ username: 'wrongUsername', password: 'password' })
+        .then(res => {
+          expect(res).to.have.status(401);
+          expect(res.body).to.be.an('object');
+          expect(res.body.message).to.equal('Unauthorized');
+        });
+    });
 
-    it('should reject requests with incorrect password');
+    it('should reject requests with incorrect password', function () {
+      return chai.request(app)
+        .post('/api/login')
+        .send({ username, password: 'wrongPassword' })
+        .then(res => {
+          expect(res).to.have.status(401);
+          expect(res.body).to.be.an('object');
+          expect(res.body.message).to.equal('Unauthorized');
+        });
+    });
   });
 
   describe('POST /api/refresh', function () {
