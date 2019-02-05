@@ -13,6 +13,7 @@ const jwtStrategy = require('./passport/jwt');
 
 const usersRouter = require('./routes/users');
 const authRouter = require('./routes/auth');
+const gamesRouter = require('./routes/games');
 
 const app = express();
 
@@ -37,8 +38,12 @@ app.use(express.json());
 passport.use(localStrategy);
 passport.use(jwtStrategy);
 
+// Protect endpoints using JWT Strategy
+const jwtAuth = passport.authenticate('jwt', { session: false, failWithError: true });
+
 // Mount routers
 app.use('/api/users', usersRouter);
+app.use('/api/games', jwtAuth, gamesRouter);
 app.use('/api', authRouter);
 
 // Custom 404 Not Found route handler

@@ -13,7 +13,7 @@ const Game = require('../models/game');
 const { TEST_DATABASE_URL, JWT_SECRET } = require('../config');
 const { dbConnect, dbDisconnect, dbDrop } = require('../db-mongoose');
 
-const { users } = require('../db/data');
+const { users, games } = require('../db/data');
 
 chai.use(chaiHttp);
 const expect = chai.expect;
@@ -28,6 +28,7 @@ describe('My Board Game Shelf API - Games', function () {
   beforeEach(() => {
     return Promise.all([
       User.insertMany(users),
+      Game.insertMany(games),
       User.createIndexes()
     ])
       .then(([users]) => {
@@ -38,13 +39,13 @@ describe('My Board Game Shelf API - Games', function () {
 
   afterEach(() => {
     sandbox.restore();
-    dbDrop();
+    return dbDrop();
   });
 
   after(() => dbDisconnect());
 
   describe('GET /api/games', function () {
-    it.only('should return the correct number of Games', function () {
+    it('should return the correct number of Games', function () {
       return Promise.all([
         Game.find({ userId: user.id }),
         chai.request(app)
