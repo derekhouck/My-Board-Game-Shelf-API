@@ -118,7 +118,13 @@ describe('My Board Game Shelf API - Authentication', function () {
   });
 
   describe('POST /api/refresh', function () {
-    it('should reject requests with no credentials');
+    it('should reject requests with no credentials', function () {
+      return chai.request(app)
+        .post('/api/refresh')
+        .then(res => {
+          expect(res).to.have.status(401);
+        });
+    });
 
     it('should reject requests with an invalid token');
 

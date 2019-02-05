@@ -23,4 +23,8 @@ router.post('/login', localAuth, (req, res) => {
   res.json({ authToken });
 });
 
+router.post('/refresh', (req, res) => {
+  res.sendStatus(401);
+});
+
 module.exports = router;
