@@ -126,10 +126,44 @@ describe('My Board Game Shelf API - Authentication', function () {
         });
     });
 
-    it('should reject requests with an invalid token');
+    it('should reject requests with an invalid token', function () {
+      const token = jwt.sign({ username, password, name }, 'Incorrect Secret');
+      return chai.request(app)
+        .post('/api/refresh')
+        .set('Authorization', `Bearer ${token}`)
+        .then(res => {
+          expect(res).to.have.status(401);
+        });
+    });
 
-    it('should reject requests with an expired token');
+    it('should reject requests with an expired token', function () {
+      const token = jwt.sign({ username, password, name }, JWT_SECRET, { subject: username, expiresIn: Math.floor(Date.now() / 1000) - 10 });
+      return chai.request(app)
+        .post('/api/refresh')
+        .set('Authorization', `Bearer ${token}`)
+        .then(res => {
+          expect(res).to.have.status(401);
+        });
+    });
 
-    it('should return a valid auth token with a newer expiry date');
+    it('should return a valid auth token with a newer expiry date', function () {
+      const user = { username, name };
+      const token = jwt.sign({ user }, JWT_SECRET, { subject: username, expiresIn: '1m' });
+      const decoded = jwt.decode(token);
+
+      return chai.request(app)
+        .post('/api/refresh')
+        .set('Authorization', `Bearer ${token}`)
+        .then(res => {
+          expect(res).to.have.status(200);
+          expect(res.body).to.been.an('object');
+          const authToken = res.body.authToken;
+          expect(authToken).to.be.a('string');
+
+          const payload = jwt.verify(authToken, JWT_SECRET);
+          expect(payload.user).to.deep.equal({ username, name });
+          expect(payload.exp).to.be.greaterThan(decoded.exp);
+        });
+    });
   });
 });

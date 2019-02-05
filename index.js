@@ -9,6 +9,7 @@ const cors = require('cors');
 const { PORT, CLIENT_ORIGIN } = require('./config');
 const { dbConnect } = require('./db-mongoose');
 const localStrategy = require('./passport/local');
+const jwtStrategy = require('./passport/jwt');
 
 const usersRouter = require('./routes/users');
 const authRouter = require('./routes/auth');
@@ -34,6 +35,7 @@ app.use(express.json());
 
 // Utilize the given `strategy`
 passport.use(localStrategy);
+passport.use(jwtStrategy);
 
 // Mount routers
 app.use('/api/users', usersRouter);
