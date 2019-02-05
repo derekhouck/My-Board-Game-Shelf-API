@@ -60,7 +60,14 @@ describe('My Board Game Shelf API - Games', function () {
         });
     });
 
-    it('should return a list sorted asc with the correct fields');
+    it('should return a list sorted asc with the correct fields', function () {
+      return Promise.all([
+        Game.find({ userId: user.id }).sort({ title: 'asc' }),
+        chai.request(app)
+          .get('/api/games')
+          .set('Authorization', `Bearer ${token}`)
+      ]);
+    });
 
     it('should return correct search results for a searchTerm query');
 
