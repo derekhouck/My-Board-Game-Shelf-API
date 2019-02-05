@@ -44,12 +44,11 @@ describe('My Board Game Shelf API - Authentication', function () {
   });
 
   describe('POST /api/login', function () {
-    it.only('should return a valid auth token', function () {
+    it('should return a valid auth token', function () {
       return chai.request(app)
         .post('/api/login')
         .send({ username, password })
         .then(res => {
-          console.log(res);
           expect(res).to.have.status(200);
           expect(res.body).to.be.an('object');
           expect(res.body.authToken).to.be.a('string');
@@ -58,7 +57,7 @@ describe('My Board Game Shelf API - Authentication', function () {
 
           expect(payload.user).to.not.have.property('password');
           expect(payload.user.id).to.equal(_id);
-          expect(payload.user.username).to.deep.equal(username);
+          expect(payload.user.username).to.deep.equal(username.toLowerCase());
         });
     });
 
