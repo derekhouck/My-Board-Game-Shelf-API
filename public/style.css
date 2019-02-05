@@ -1,3 +1,8 @@
 body {
+  font-family: 'Raleway', sans-serif;
   padding: 1em;
+}
+
+h1 {
+  font-family: 'Luckiest Guy', cursive;
 }
