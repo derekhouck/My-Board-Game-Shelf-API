@@ -1,10 +1,13 @@
 'use strict';
 
 const express = require('express');
+const passport = require('passport');
 
 const User = require('../models/user');
 
 const router = express.Router();
+
+const jwtAuth = passport.authenticate('jwt', { session: false, failWithError: true });
 
 router.post('/', (req, res, next) => {
   const requiredFields = ['username', 'password'];
@@ -102,7 +105,7 @@ router.post('/', (req, res, next) => {
     });
 });
 
-router.get('/', (req, res, next) => {
+router.get('/', jwtAuth, (req, res, next) => {
   return User
     .find()
     .then(users => res.json(users))

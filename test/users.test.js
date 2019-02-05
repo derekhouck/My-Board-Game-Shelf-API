@@ -3,9 +3,10 @@
 const app = require('../index');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
+const jwt = require('jsonwebtoken');
 const sinon = require('sinon');
 
-const { TEST_DATABASE_URL } = require('../config');
+const { TEST_DATABASE_URL, JWT_SECRET } = require('../config');
 const { dbConnect, dbDisconnect, dbDrop } = require('../db-mongoose');
 
 const User = require('../models/user');
@@ -263,13 +264,8 @@ describe('My Board Game Shelf API - Users', function () {
   });
 
   describe('GET /api/users', function () {
-    it('should return an empty array initially', function () {
-      return chai.request(app).get('/api/users').then(res => {
-        expect(res).to.have.status(200);
-        expect(res.body).to.be.an('array');
-        expect(res.body).to.have.length(0);
-      });
-    });
+    const user = { username, name };
+    const token = jwt.sign({ user }, JWT_SECRET, { subject: username, expiresIn: '1m' });
 
     it('should return an array of users', function () {
       const userOne = { username, password, name };
@@ -280,7 +276,12 @@ describe('My Board Game Shelf API - Users', function () {
       };
       return User
         .create(userOne, userTwo)
-        .then(() => chai.request(app).get('/api/users'))
+        .then(() => {
+          return chai
+            .request(app)
+            .get('/api/users')
+            .set('Authorization', `Bearer ${token}`);
+        })
         .then(res => {
           expect(res).to.have.status(200);
           expect(res.body).to.be.an('array');
@@ -296,7 +297,12 @@ describe('My Board Game Shelf API - Users', function () {
 
       return User
         .create({ username, password, name })
-        .then(() => chai.request(app).get('/api/users'))
+        .then(() => {
+          return chai
+            .request(app)
+            .get('/api/users')
+            .set('Authorization', `Bearer ${token}`);
+        })
         .then(res => {
           expect(res).to.have.status(500);
           expect(res).to.be.json;
