@@ -167,7 +167,13 @@ router.put('/:id', isValidId, (req, res, next) => {
   Game
     .findOneAndUpdate({ _id: id, userId }, toUpdate, { new: true })
     .populate('tags')
-    .then(result => res.json(result))
+    .then(result => {
+      if (result) {
+        res.json(result);
+      } else {
+        next();
+      }
+    })
     .catch(err => next(err));
 });
 

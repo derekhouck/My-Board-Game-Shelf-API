@@ -507,7 +507,19 @@ describe('My Board Game Shelf API - Games', function () {
 
     });
 
-    it('should respond with a 404 for an id that does not exist');
+    it('should respond with a 404 for an id that does not exist', function () {
+      // The string "DOESNOTEXIST" is 12 bytes which is a valid Mongo ObjectId
+      const updateItem = {
+        title: 'Updated Title'
+      };
+      return chai.request(app)
+        .put('/api/games/DOESNOTEXIST')
+        .set('Authorization', `Bearer ${token}`)
+        .send(updateItem)
+        .then(res => {
+          expect(res).to.have.status(404);
+        });
+    });
 
     it('should return an error when "title" is an empty string');
 
