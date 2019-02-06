@@ -10,10 +10,11 @@ const jwt = require('jsonwebtoken');
 const app = require('../index');
 const User = require('../models/user');
 const Game = require('../models/game');
+const Tag = require('../models/tag');
 const { TEST_DATABASE_URL, JWT_SECRET } = require('../config');
 const { dbConnect, dbDisconnect, dbDrop } = require('../db-mongoose');
 
-const { users, games } = require('../db/data');
+const { users, games, tags } = require('../db/data');
 
 chai.use(chaiHttp);
 const expect = chai.expect;
@@ -29,6 +30,7 @@ describe('My Board Game Shelf API - Games', function () {
     return Promise.all([
       User.insertMany(users),
       Game.insertMany(games),
+      Tag.insertMany(tags),
       User.createIndexes()
     ])
       .then(([users]) => {
@@ -148,6 +150,24 @@ describe('My Board Game Shelf API - Games', function () {
             expect(new Date(item.createdAt)).to.eql(data[i].createdAt);
             expect(new Date(item.updatedAt)).to.eql(data[i].updatedAt);
           });
+        });
+    });
+
+    it('should return correct search results for a tagId query', function () {
+      return Tag.findOne()
+        .then(data => {
+          return Promise.all([
+            Game.find({ tags: data.id, userId: user.id, }),
+            chai.request(app)
+              .get(`/api/games?tagId=${data.id}`)
+              .set('Authorization', `Bearer ${token}`)
+          ]);
+        })
+        .then(([data, res]) => {
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('array');
+          expect(res.body).to.have.length(data.length);
         });
     });
 
