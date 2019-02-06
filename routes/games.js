@@ -82,6 +82,12 @@ router.post('/', (req, res, next) => {
   isNumber(minPlayers);
   isNumber(maxPlayers);
 
+  if (maxPlayers < minPlayers) {
+    const err = new Error('`maxPlayers` should not be less than `minPlayers`');
+    err.status = 400;
+    return next(err);
+  }
+
   const newGame = { 
     title, 
     players: {

@@ -348,7 +348,23 @@ describe('My Board Game Shelf API - Games', function () {
         }); 
     });
 
-    it('should return an error when max players is less than min players');
+    it('should return an error when max players is less than min players', function () {
+      const newItem = {
+        title: 'Test Game',
+        minPlayers: 2,
+        maxPlayers: 1 
+      };
+      return chai.request(app)
+        .post('/api/games')
+        .set('Authorization', `Bearer ${token}`)
+        .send(newItem)
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('`maxPlayers` should not be less than `minPlayers`');
+        }); 
+    });
 
     it('should return an error when a tag `id` is not valid');
 
