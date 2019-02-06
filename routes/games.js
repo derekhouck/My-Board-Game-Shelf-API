@@ -56,4 +56,18 @@ router.get('/:id', (req, res, next) => {
     .catch(err => next(err));
 });
 
+// POST /api/games
+router.post('/', (req, res, next) => {
+  const { title } = req.body;
+  const userId = req.user.id;
+
+  const newGame = { title, userId };
+
+  Game.create(newGame)
+    .then(result => {
+      res.location(`${req.originalUrl}/${result.id}`).status(201).json(result);
+    })
+    .catch(err => next(err));
+});
+
 module.exports =router;

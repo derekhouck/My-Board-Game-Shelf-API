@@ -272,7 +272,32 @@ describe('My Board Game Shelf API - Games', function () {
   });
 
   describe('POST /api/games', function () {
-    it('should create and return a new game when provided valid data');
+    it('should create and return a new game when provided valid data', function () {
+      const newItem = {
+        title: 'Test Game'
+      };
+      let res;
+      return chai.request(app)
+        .post('/api/games')
+        .set('Authorization', `Bearer ${token}`)
+        .send(newItem)
+        .then(function (_res) {
+          res = _res;
+          expect(res).to.have.status(201);
+          expect(res).to.have.header('location');
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body).to.have.all.keys('id', 'title','createdAt', 'updatedAt', 'tags', 'userId');
+          return Game.findOne({ _id: res.body.id, userId: user.id });
+        })
+        .then(data => {
+          expect(res.body.id).to.equal(data.id);
+          expect(res.body.title).to.equal(data.title);
+          expect(res.body.userId).to.equal(data.userId.toString());
+          expect(new Date(res.body.createdAt)).to.eql(data.createdAt);
+          expect(new Date(res.body.updatedAt)).to.eql(data.updatedAt);
+        });
+    });
 
     it('should create and return when min and max players are missing');
 
