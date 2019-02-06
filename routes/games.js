@@ -199,7 +199,7 @@ router.put('/:id',
   });
 
 // DELETE /api/games/:id
-router.delete('/:id', (req, res, next) => {
+router.delete('/:id', isValidId, (req, res, next) => {
   const { id } = req.params;
   const userId = req.user.id;
 

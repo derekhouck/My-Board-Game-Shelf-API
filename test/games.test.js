@@ -645,7 +645,15 @@ describe('My Board Game Shelf API - Games', function () {
         });
     });
 
-    it('should respond with a 400 for an invalid id');
+    it('should respond with a 400 for an invalid id', function () {
+      return chai.request(app)
+        .delete('/api/games/NOT-A-VALID-ID')
+        .set('Authorization', `Bearer ${token}`)
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res.body.message).to.equal('The `id` is not valid');
+        });
+    });
 
     it('should catch errors and respond properly');
   });
