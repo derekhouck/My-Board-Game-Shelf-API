@@ -46,7 +46,13 @@ router.get('/:id', (req, res, next) => {
   }
 
   Game.findOne({ _id: id, userId })
-    .then(result => res.json(result))
+    .then(result => {
+      if (result) {
+        res.json(result);
+      } else {
+        next();
+      }
+    })
     .catch(err => next(err));
 });
 
