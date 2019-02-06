@@ -244,7 +244,7 @@ describe('My Board Game Shelf API - Games', function () {
         });
     });
 
-    it('should respond with a 404 for an ide that does not exist', function () {
+    it('should respond with a 404 for an id that does not exist', function () {
       // The string "DOESNOTEXIST" is 12 bytes which is a valid Mongo ObjectId
       return chai.request(app)
         .get('/api/games/DOESNOTEXIST')
@@ -254,7 +254,21 @@ describe('My Board Game Shelf API - Games', function () {
         });
     });
 
-    it('should catch errors and respond properly');
+    it('should catch errors and respond properly', function () {
+      sandbox.stub(Game.schema.options.toJSON, 'transform').throws('FakeError');
+      return Game.findOne()
+        .then(data => {
+          return chai.request(app)
+            .get(`/api/games/${data.id}`)
+            .set('Authorization', `Bearer ${token}`);
+        })
+        .then(res => {
+          expect(res).to.have.status(500);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('Internal Server Error');
+        });
+    });
   });
 
   describe('POST /api/games', function () {
