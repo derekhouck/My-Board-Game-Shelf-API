@@ -171,9 +171,43 @@ describe('My Board Game Shelf API - Games', function () {
         });
     });
 
-    it('should return an empty array for an incorrect query');
+    it('should return an empty array for an incorrect query', function () {
+      const searchTerm = 'NOT-A-VALID-QUERY';
 
-    it('should catch errors and respond properly');
+      const re = new RegExp(searchTerm, 'i');
+      const dbPromise = Game
+        .find({
+          userId: user.id,
+          title: re
+        })
+        .sort({ title: 'asc' });
+
+      const apiPromise = chai.request(app)
+        .get(`/api/games?searchTerm=${searchTerm}`)
+        .set('Authorization', `Bearer ${token}`);
+
+      return Promise.all([dbPromise, apiPromise])
+        .then(([data, res]) => {
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('array');
+          expect(res.body).to.have.length(data.length);
+        });
+    });
+
+    it('should catch errors and respond properly', function () {
+      sandbox.stub(Game.schema.options.toJSON, 'transform').throws('FakeError');
+
+      return chai.request(app)
+        .get('/api/games')
+        .set('Authorization', `Bearer ${token}`)
+        .then(res => {
+          expect(res).to.have.status(500);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('Internal Server Error');
+        });
+    });
   });
 
   describe('GET /api/games/:id', function () {
