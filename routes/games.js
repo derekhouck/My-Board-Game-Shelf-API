@@ -17,6 +17,28 @@ const isValidId = (req, res, next) => {
   }
 };
 
+const validatePlayers = (req, res, next) => {
+  const fields = ['minPlayers', 'maxPlayers'];
+  const filteredFields = fields.filter(field => field in req.body);
+  if (filteredFields.length > 0) {
+    const isNumber = num => {
+      if (num === undefined || num === '') {
+        return;
+      }
+
+      if (!Number(num)) {
+        const err = new Error('`minPlayers` and `maxPlayers` should be numbers');
+        err.status = 400;
+        return next(err);
+      }
+    };
+    filteredFields.forEach(field => {
+      isNumber(req.body[field]);
+    });
+  }
+  return next();
+};
+
 const validateTagIds = (tags, userId) => {
   if (tags === undefined) {
     return Promise.resolve();
@@ -98,7 +120,7 @@ router.get('/:id', isValidId, (req, res, next) => {
 });
 
 // POST /api/games
-router.post('/', (req, res, next) => {
+router.post('/', validatePlayers, (req, res, next) => {
   const { title, minPlayers, maxPlayers, tags } = req.body;
   const userId = req.user.id;
 
@@ -108,35 +130,20 @@ router.post('/', (req, res, next) => {
     return next(err);
   }
 
-  const isNumber = num => {
-    if (num === undefined || num === '') {
-      return;
-    }
-
-    if (!Number(num)) {
-      const err = new Error('`minPlayers` and `maxPlayers` should be numbers');
-      err.status = 400;
-      return next(err);
-    }
-  };
-
-  isNumber(minPlayers);
-  isNumber(maxPlayers);
-
   if (maxPlayers < minPlayers) {
     const err = new Error('`maxPlayers` should not be less than `minPlayers`');
     err.status = 400;
     return next(err);
   }
 
-  const newGame = { 
-    title, 
+  const newGame = {
+    title,
     players: {
       min: minPlayers,
       max: maxPlayers
     },
     tags,
-    userId 
+    userId
   };
 
   validateTagIds(newGame.tags, userId)
@@ -148,39 +155,42 @@ router.post('/', (req, res, next) => {
 });
 
 // PUT /api/games/:id
-router.put('/:id', isValidId, (req, res, next) => {
-  const { id } = req.params;
-  const userId = req.user.id;
+router.put('/:id',
+  isValidId,
+  validatePlayers,
+  (req, res, next) => {
+    const { id } = req.params;
+    const userId = req.user.id;
 
-  const toUpdate = {};
-  const updateableFields = ['title', 'minPlayers', 'maxPlayers', 'tags'];
+    const toUpdate = {};
+    const updateableFields = ['title', 'minPlayers', 'maxPlayers', 'tags'];
 
-  updateableFields.forEach(field => {
-    if ((field === 'minPlayers') || (field === 'maxPlayers')) {
-      toUpdate.players = Object.assign({}, toUpdate.players);
-      field === 'minPlayers' ? toUpdate.players.min = req.body[field] : toUpdate.players.max = req.body[field];
-    } else if (field in req.body) {
-      toUpdate[field] = req.body[field];
+    updateableFields.forEach(field => {
+      if ((field === 'minPlayers') || (field === 'maxPlayers')) {
+        toUpdate.players = Object.assign({}, toUpdate.players);
+        field === 'minPlayers' ? toUpdate.players.min = req.body[field] : toUpdate.players.max = req.body[field];
+      } else if (field in req.body) {
+        toUpdate[field] = req.body[field];
+      }
+    });
+
+    if (toUpdate.title === '') {
+      const err = new Error('Missing `title` in request body');
+      err.status = 400;
+      return next(err);
     }
+
+    Game
+      .findOneAndUpdate({ _id: id, userId }, toUpdate, { new: true })
+      .populate('tags')
+      .then(result => {
+        if (result) {
+          res.json(result);
+        } else {
+          next();
+        }
+      })
+      .catch(err => next(err));
   });
 
-  if (toUpdate.title === '') {
-    const err = new Error('Missing `title` in request body');
-    err.status = 400;
-    return next(err);
-  }
-
-  Game
-    .findOneAndUpdate({ _id: id, userId }, toUpdate, { new: true })
-    .populate('tags')
-    .then(result => {
-      if (result) {
-        res.json(result);
-      } else {
-        next();
-      }
-    })
-    .catch(err => next(err));
-});
-
-module.exports =router;
+module.exports = router;

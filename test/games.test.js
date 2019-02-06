@@ -540,7 +540,27 @@ describe('My Board Game Shelf API - Games', function () {
         });
     });
 
-    it('should return an error when min or max players are not numbers');
+    it('should return an error when min or max players are not numbers', function () {
+      const updateItem = {
+        minPlayers: 'not a number',
+        maxPlayers: 'not a number'
+      };
+      let data;
+      return Game.findOne({ userId: user.id })
+        .then(_data => {
+          data = _data;
+          return chai.request(app)
+            .put(`/api/games/${data.id}`)
+            .set('Authorization', `Bearer ${token}`)
+            .send(updateItem);
+        })
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('`minPlayers` and `maxPlayers` should be numbers');
+        }); 
+    });
 
     it('should return an error when max players is less than min players');
 
