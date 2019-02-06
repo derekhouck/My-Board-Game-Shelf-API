@@ -1,3 +1,10 @@
 language: node_js
 node_js: node
 services: mongodb
+deploy:
+  provider: heroku
+  api_key:
+    secure: XOYiRrrOx0Gj6bHuuyqymPt3VRFld9KcanK6wi6K6hPnJOzTA4bIZXyGsaY0sLVgzstrVpB5xx7QKl893HqjcMy6r5WSffLhyC516bUX16PhdzZ9FAPdGshcBAMmzWA7rlCu2nsx4vUC8gmu3K4yf57DvHWupOEFJ/++zmP//4X70Laat07F/BR+wKIzE5pjK7MPQ5exXgelWsntaakcqaX8j2YgtldvFLmtJHz+ta+Y+Oq2bPMYfa0VCDXUKpQh2nGiYb9emVyzlpeKuR6EVURdxDIVNXuD5hV+tpPQ+CeBPn7CcY/MNPs/4wHZ9ZKq1v+FNe3GONTrue/f1/uh79bTCjE/jThbv9XGiGBiJ05ip8meuquWp8S0PO9B7YBMJa/IS7XvuKfL1DQ4o53aCsa1F8ngkaHnZqaWn4b7FNjWzTxNN/QhlnuQPJb1E84yvIASCw8X6PCIeJKRIQbk2ZFxstm4DuEcUHcc5nhuyBSHP1NQjB8hx6QA02yPj7+Im0XVkEeY+13kHmTD+GtM4k8nV47J8yrJOryql4x/YBig8//MyN8ESCtqtJ1/U6ZSp/N1/bUtobetxwECJQy/0Fl5k/61QIGDY1uVD5GQlOVZjKHfcc1ML5p9O+sL8GyL60hUx/RYWkK6rVLgACgKmZqreAwSi/Xq7AiktzalFas=
+  app: my-board-game-shelf-api
+  on:
+    repo: derekhouck/My-Board-Game-Shelf-API
