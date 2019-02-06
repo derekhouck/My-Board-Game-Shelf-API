@@ -85,7 +85,37 @@ describe('My Board Game Shelf API - Games', function () {
         });
     });
 
-    it('should return correct search results for a searchTerm query');
+    it('should return correct search results for a searchTerm query', function () {
+      const searchTerm = 'king';
+
+      const re = new RegExp(searchTerm, 'i');
+      const dbPromise = Game
+        .find({
+          userId: user.id,
+          title: re
+        })
+        .sort({ title: 'asc' });
+
+      const apiPromise = chai.request(app)
+        .get(`/api/games?searchTerm=${searchTerm}`)
+        .set('Authorization', `Bearer ${token}`);
+
+      return Promise.all([dbPromise, apiPromise])
+        .then(([data, res]) => {
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('array');
+          expect(res.body).to.have.length(data.length);
+          res.body.forEach(function (item, i) {
+            expect(item).to.be.a('object');
+            expect(item).to.include.all.keys('id', 'title', 'createdAt', 'updatedAt');
+            expect(item.id).to.equal(data[i].id);
+            expect(item.title).to.equal(data[i].title);
+            expect(new Date(item.createdAt)).to.eql(data[i].createdAt);
+            expect(new Date(item.updatedAt)).to.eql(data[i].updatedAt);
+          });
+        });
+    });
 
     it('should return correct search results for number of players query');
 

@@ -31,7 +31,7 @@ const games = [
   },
   {
     _id: '111111111111111111111105',
-    title: 'Chess',
+    title: 'King of New York',
     userId: '000000000000000000000001'
   },
   {
