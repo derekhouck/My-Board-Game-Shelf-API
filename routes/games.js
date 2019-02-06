@@ -6,6 +6,17 @@ const mongoose = require('mongoose');
 const Game = require('../models/game');
 const Tag = require('../models/tag');
 
+const isValidId = (req, res, next) => {
+  const { id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    const err = new Error('The `id` is not valid');
+    err.status = 400;
+    return next(err);
+  } else {
+    next();
+  }
+};
+
 const validateTagIds = (tags, userId) => {
   if (tags === undefined) {
     return Promise.resolve();
@@ -71,15 +82,9 @@ router.get('/', (req, res, next) => {
 });
 
 // GET /api/games/:id
-router.get('/:id', (req, res, next) => {
+router.get('/:id', isValidId, (req, res, next) => {
   const { id } = req.params;
   const userId = req.user.id;
-
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    const err = new Error('The `id` is not valid');
-    err.status = 400;
-    return next(err);
-  }
 
   Game.findOne({ _id: id, userId })
     .then(result => {
@@ -143,7 +148,7 @@ router.post('/', (req, res, next) => {
 });
 
 // PUT /api/games/:id
-router.put('/:id', (req, res, next) => {
+router.put('/:id', isValidId, (req, res, next) => {
   const { id } = req.params;
   const userId = req.user.id;
 
