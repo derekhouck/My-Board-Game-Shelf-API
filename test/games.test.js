@@ -584,7 +584,24 @@ describe('My Board Game Shelf API - Games', function () {
         }); 
     });
 
-    it('should return an error when a tag `id` is not valid');
+    it('should return an error when a tag `id` is not valid', function () {
+      const updateItem = {
+        tags: ['NOT-A-VALID-ID']
+      };
+      return Game.findOne({ userId: user.id })
+        .then(data => {
+          return chai.request(app)
+            .put(`/api/games/${data.id}`)
+            .set('Authorization', `Bearer ${token}`)
+            .send(updateItem);
+        })
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('The `tags` array contains an invalid `id`');
+        });
+    });
 
     it('should catch errors and respond properly');
   });
