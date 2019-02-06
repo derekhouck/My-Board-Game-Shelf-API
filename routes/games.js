@@ -18,6 +18,7 @@ const isValidId = (req, res, next) => {
 };
 
 const validatePlayers = (req, res, next) => {
+  const { minPlayers, maxPlayers } = req.body;
   const fields = ['minPlayers', 'maxPlayers'];
   const filteredFields = fields.filter(field => field in req.body);
   if (filteredFields.length > 0) {
@@ -36,6 +37,13 @@ const validatePlayers = (req, res, next) => {
       isNumber(req.body[field]);
     });
   }
+
+  if (maxPlayers < minPlayers) {
+    const err = new Error('`maxPlayers` should not be less than `minPlayers`');
+    err.status = 400;
+    return next(err);
+  }
+
   return next();
 };
 
@@ -126,12 +134,6 @@ router.post('/', validatePlayers, (req, res, next) => {
 
   if (!title) {
     const err = new Error('Missing `title` in request body');
-    err.status = 400;
-    return next(err);
-  }
-
-  if (maxPlayers < minPlayers) {
-    const err = new Error('`maxPlayers` should not be less than `minPlayers`');
     err.status = 400;
     return next(err);
   }
