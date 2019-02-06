@@ -4,6 +4,42 @@ const express = require('express');
 const mongoose = require('mongoose');
 
 const Game = require('../models/game');
+const Tag = require('../models/tag');
+
+const validateTagIds = (tags, userId) => {
+  if (tags === undefined) {
+    return Promise.resolve();
+  }
+
+  if (!Array.isArray(tags)) {
+    const err = new Error('The `tags` property must be an array');
+    err.status = 400;
+    return Promise.reject(err);
+  }
+
+  const badIds = tags.filter((tag) => !mongoose.Types.ObjectId.isValid(tag));
+  if (badIds.length) {
+    const err = new Error('The `tags` array contains an invalid `id`');
+    err.status = 400;
+    return Promise.reject(err);
+  }
+
+  return Tag.countDocuments({
+    $and: [
+      {
+        _id: { $in: tags },
+        userId
+      }
+    ]
+  })
+    .then(count => {
+      if (tags.length > count) {
+        const err = new Error('The `tags` array contains an invalid `id`');
+        err.status = 400;
+        return Promise.reject(err);
+      }
+    });
+};
 
 const router = express.Router();
 
@@ -58,7 +94,7 @@ router.get('/:id', (req, res, next) => {
 
 // POST /api/games
 router.post('/', (req, res, next) => {
-  const { title, minPlayers, maxPlayers } = req.body;
+  const { title, minPlayers, maxPlayers, tags } = req.body;
   const userId = req.user.id;
 
   if (!title) {
@@ -94,10 +130,12 @@ router.post('/', (req, res, next) => {
       min: minPlayers,
       max: maxPlayers
     },
+    tags,
     userId 
   };
 
-  Game.create(newGame)
+  validateTagIds(newGame.tags, userId)
+    .then(() => Game.create(newGame))
     .then(result => {
       res.location(`${req.originalUrl}/${result.id}`).status(201).json(result);
     })

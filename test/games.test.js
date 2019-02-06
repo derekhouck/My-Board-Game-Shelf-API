@@ -366,9 +366,41 @@ describe('My Board Game Shelf API - Games', function () {
         }); 
     });
 
-    it('should return an error when a tag `id` is not valid');
+    it('should return an error when a tag `id` is not valid', function () {
+      const newItem = {
+        title: 'Example Game',
+        tags: ['NOT-A-VALID-ID']
+      };
+      return chai.request(app)
+        .post('/api/games')
+        .set('Authorization', `Bearer ${token}`)
+        .send(newItem)
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('The `tags` array contains an invalid `id`');
+        });
+    });
 
-    it('should catch errors and respond properly');
+    it('should catch errors and respond properly', function () {
+      sandbox.stub(Game.schema.options.toJSON, 'transform').throws('FakeError');
+
+      const newItem = {
+        title: 'Example Game'
+      };
+
+      return chai.request(app)
+        .post('/api/games')
+        .set('Authorization', `Bearer ${token}`)
+        .send(newItem)
+        .then(res => {
+          expect(res).to.have.status(500);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('Internal Server Error');
+        });
+    });
   });
 
   describe('PUT /api/games/:id', function () {
