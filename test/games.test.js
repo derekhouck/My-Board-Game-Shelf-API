@@ -211,7 +211,28 @@ describe('My Board Game Shelf API - Games', function () {
   });
 
   describe('GET /api/games/:id', function () {
-    it('should return correct games');
+    it('should return correct games', function () {
+      let data;
+      return Game.findOne({ userId: user.id })
+        .then(_data => {
+          data = _data;
+          return chai.request(app)
+            .get(`/api/games/${data.id}`)
+            .set('Authorization', `Bearer ${token}`);
+        })
+        .then((res) => {
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+          expect(res.body).to.be.an('object');
+          expect(res.body).to.include.all.keys('id', 'title', 'createdAt', 'updatedAt', 'userId');
+          expect(res.body.id).to.equal(data.id);
+          expect(res.body.title).to.equal(data.title);
+          expect(res.body.content).to.equal(data.content);
+          expect(res.body.userId).to.equal(data.userId.toString());
+          expect(new Date(res.body.createdAt)).to.eql(data.createdAt);
+          expect(new Date(res.body.updatedAt)).to.eql(data.updatedAt);
+        });
+    });
 
     it('should respond with status 400 and an error message when `id` is not valid');
 

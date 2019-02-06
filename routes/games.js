@@ -33,4 +33,14 @@ router.get('/', (req, res, next) => {
     .catch(err => next(err));
 });
 
+// GET /api/games/:id
+router.get('/:id', (req, res, next) => {
+  const { id } = req.params;
+  const userId = req.user.id;
+
+  Game.findOne({ _id: id, userId })
+    .then(result => res.json(result))
+    .catch(err => next(err));
+});
+
 module.exports =router;
