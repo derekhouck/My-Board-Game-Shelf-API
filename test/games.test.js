@@ -299,9 +299,20 @@ describe('My Board Game Shelf API - Games', function () {
         });
     });
 
-    it('should create and return when min and max players are missing');
-
-    it('should return an error when missing "title" field');
+    it('should return an error when missing "title" field', function () {
+      const newItem = {
+      };
+      return chai.request(app)
+        .post('/api/games')
+        .set('Authorization', `Bearer ${token}`)
+        .send(newItem)
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('Missing `title` in request body');
+        });
+    });
 
     it('should return an error when "title" is empty string');
 

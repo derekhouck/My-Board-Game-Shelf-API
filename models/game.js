@@ -3,7 +3,7 @@
 const mongoose = require('mongoose');
 
 const schema = new mongoose.Schema({
-  title: String,
+  title: { type: String, required: true },
   players: {
     min: Number,
     max: Number

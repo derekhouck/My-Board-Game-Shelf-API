@@ -61,6 +61,12 @@ router.post('/', (req, res, next) => {
   const { title } = req.body;
   const userId = req.user.id;
 
+  if (!title) {
+    const err = new Error('Missing `title` in request body');
+    err.status = 400;
+    return next(err);
+  }
+
   const newGame = { title, userId };
 
   Game.create(newGame)
