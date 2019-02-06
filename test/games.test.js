@@ -154,10 +154,10 @@ describe('My Board Game Shelf API - Games', function () {
     });
 
     it('should return correct search results for a tagId query', function () {
-      return Tag.findOne()
+      return Tag.findOne({ userId: user.id })
         .then(data => {
           return Promise.all([
-            Game.find({ tags: data.id, userId: user.id, }),
+            Game.find({ tags: data.id, userId: user.id }),
             chai.request(app)
               .get(`/api/games?tagId=${data.id}`)
               .set('Authorization', `Bearer ${token}`)
