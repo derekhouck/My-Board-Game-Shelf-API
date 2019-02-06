@@ -58,7 +58,7 @@ router.get('/:id', (req, res, next) => {
 
 // POST /api/games
 router.post('/', (req, res, next) => {
-  const { title } = req.body;
+  const { title, minPlayers, maxPlayers } = req.body;
   const userId = req.user.id;
 
   if (!title) {
@@ -67,7 +67,29 @@ router.post('/', (req, res, next) => {
     return next(err);
   }
 
-  const newGame = { title, userId };
+  const isNumber = num => {
+    if (num === undefined || num === '') {
+      return;
+    }
+
+    if (!Number(num)) {
+      const err = new Error('`minPlayers` and `maxPlayers` should be numbers');
+      err.status = 400;
+      return next(err);
+    }
+  };
+
+  isNumber(minPlayers);
+  isNumber(maxPlayers);
+
+  const newGame = { 
+    title, 
+    players: {
+      min: minPlayers,
+      max: maxPlayers
+    },
+    userId 
+  };
 
   Game.create(newGame)
     .then(result => {

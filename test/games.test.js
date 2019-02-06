@@ -314,9 +314,39 @@ describe('My Board Game Shelf API - Games', function () {
         });
     });
 
-    it('should return an error when "title" is empty string');
+    it('should return an error when "title" is empty string', function () {
+      const newItem = {
+        title: ''
+      };
+      return chai.request(app)
+        .post('/api/games')
+        .set('Authorization', `Bearer ${token}`)
+        .send(newItem)
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('Missing `title` in request body');
+        });
+    });
 
-    it('should return an error when min or max players are not numbers');
+    it('should return an error when min or max players are not numbers', function () {
+      const newItem = {
+        title: 'Test Game',
+        minPlayers: 'not a number',
+        maxPlayers: 'not a number'
+      };
+      return chai.request(app)
+        .post('/api/games')
+        .set('Authorization', `Bearer ${token}`)
+        .send(newItem)
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('`minPlayers` and `maxPlayers` should be numbers');
+        }); 
+    });
 
     it('should return an error when max players is less than min players');
 
