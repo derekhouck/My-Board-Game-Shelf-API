@@ -404,7 +404,32 @@ describe('My Board Game Shelf API - Games', function () {
   });
 
   describe('PUT /api/games/:id', function () {
-    it('should update the game when provided a valid title');
+    it('should update the game when provided a valid title', function () {
+      const updateItem = { title: 'Updated Title' };
+      let data;
+      return Game.findOne({
+        userId: user.id
+      })
+        .then(_data => {
+          data = _data;
+          return chai.request(app)
+            .put(`/api/games/${data.id}`)
+            .set('Authorization', `Bearer ${token}`)
+            .send(updateItem);
+        })
+        .then(function (res) {
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body).to.include.keys('id', 'title', 'createdAt', 'updatedAt');
+          expect(res.body.id).to.equal(data.id);
+          expect(res.body.title).to.equal(updateItem.title);
+          expect(res.body.tags).to.deep.equal(data.tags);
+          expect(new Date(res.body.createdAt)).to.eql(data.createdAt);
+          // expect game to have been updated
+          expect(new Date(res.body.updatedAt)).to.greaterThan(data.updatedAt);
+        });
+    });
 
     it('should update the game when provided valid min and max player data');
 

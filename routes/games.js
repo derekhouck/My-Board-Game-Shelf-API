@@ -142,4 +142,23 @@ router.post('/', (req, res, next) => {
     .catch(err => next(err));
 });
 
+// PUT /api/games/:id
+router.put('/:id', (req, res, next) => {
+  const { id } = req.params;
+  const userId = req.user.id;
+
+  const toUpdate = {};
+  const updateableFields = ['title'];
+
+  updateableFields.forEach(field => {
+    if (field in req.body) {
+      toUpdate[field] = req.body[field];
+    }
+  });
+
+  Game.findOneAndUpdate({ _id: id, userId }, toUpdate, { new: true })
+    .then(result => res.json(result))
+    .catch(err => next(err));
+});
+
 module.exports =router;
