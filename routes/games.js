@@ -13,6 +13,7 @@ router.get('/', (req, res, next) => {
   let filter = { userId };
 
   Game.find(filter)
+    .sort({ title: 'asc' })
     .then(results => res.json(results))
     .catch(err => next(err));
 });

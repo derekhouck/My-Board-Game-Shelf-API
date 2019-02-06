@@ -66,7 +66,23 @@ describe('My Board Game Shelf API - Games', function () {
         chai.request(app)
           .get('/api/games')
           .set('Authorization', `Bearer ${token}`)
-      ]);
+      ])
+        .then(([data, res]) => {
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('array');
+          expect(res.body).to.have.length(data.length);
+          res.body.forEach(function (item, i) {
+            expect(item).to.be.a('object');
+            // Note: folderId, tags and content are optional
+            expect(item).to.include.all.keys('id', 'title', 'createdAt', 'updatedAt', 'userId');
+            expect(item.id).to.equal(data[i].id);
+            expect(item.title).to.equal(data[i].title);
+            expect(item.userId).to.equal(data[i].userId.toString());
+            expect(new Date(item.createdAt)).to.eql(data[i].createdAt);
+            expect(new Date(item.updatedAt)).to.eql(data[i].updatedAt);
+          });
+        });
     });
 
     it('should return correct search results for a searchTerm query');
