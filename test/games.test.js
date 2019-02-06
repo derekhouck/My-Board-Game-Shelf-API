@@ -460,7 +460,37 @@ describe('My Board Game Shelf API - Games', function () {
         });
     });
 
-    it('should update the game when provided a valid tag');
+    it('should update the game when provided a valid tag', function () {
+      const updateItem = { tags: [] };
+      let data;
+
+      return Promise.all([
+        Tag.findOne({ userId: user.id }),
+        Game.findOne({
+          userId: user.id
+        })
+      ])
+        .then(([tag, note]) => {
+          updateItem.tags.push(tag.id);
+          data = note;
+          return chai.request(app)
+            .put(`/api/games/${note.id}`)
+            .set('Authorization', `Bearer ${token}`)
+            .send(updateItem);
+        })
+        .then(function (res) {
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body).to.include.keys('id', 'title', 'createdAt', 'updatedAt');
+          expect(res.body.id).to.equal(data.id);
+          expect(res.body.title).to.equal(data.title);
+          expect(res.body.tags[0].id).to.equal(updateItem.tags[0]);
+          expect(new Date(res.body.createdAt)).to.eql(data.createdAt);
+          // expect note to have been updated
+          expect(new Date(res.body.updatedAt)).to.greaterThan(data.updatedAt);
+        });
+    });
 
     it('should respond with status 400 and an error message when `id` is not valid');
 

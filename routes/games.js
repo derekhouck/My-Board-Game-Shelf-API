@@ -148,7 +148,7 @@ router.put('/:id', (req, res, next) => {
   const userId = req.user.id;
 
   const toUpdate = {};
-  const updateableFields = ['title', 'minPlayers', 'maxPlayers'];
+  const updateableFields = ['title', 'minPlayers', 'maxPlayers', 'tags'];
 
   updateableFields.forEach(field => {
     if ((field === 'minPlayers') || (field === 'maxPlayers')) {
@@ -159,7 +159,9 @@ router.put('/:id', (req, res, next) => {
     }
   });
 
-  Game.findOneAndUpdate({ _id: id, userId }, toUpdate, { new: true })
+  Game
+    .findOneAndUpdate({ _id: id, userId }, toUpdate, { new: true })
+    .populate('tags')
     .then(result => res.json(result))
     .catch(err => next(err));
 });
