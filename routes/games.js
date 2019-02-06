@@ -164,6 +164,12 @@ router.put('/:id', isValidId, (req, res, next) => {
     }
   });
 
+  if (toUpdate.title === '') {
+    const err = new Error('Missing `title` in request body');
+    err.status = 400;
+    return next(err);
+  }
+
   Game
     .findOneAndUpdate({ _id: id, userId }, toUpdate, { new: true })
     .populate('tags')

@@ -521,7 +521,24 @@ describe('My Board Game Shelf API - Games', function () {
         });
     });
 
-    it('should return an error when "title" is an empty string');
+    it('should return an error when "title" is an empty string', function () {
+      const updateItem = { title: '' };
+      let data;
+      return Game.findOne({ userId: user.id })
+        .then(_data => {
+          data = _data;
+          return chai.request(app)
+            .put(`/api/games/${data.id}`)
+            .set('Authorization', `Bearer ${token}`)
+            .send(updateItem);
+        })
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('Missing `title` in request body');
+        });
+    });
 
     it('should return an error when min or max players are not numbers');
 
