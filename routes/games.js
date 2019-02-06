@@ -148,10 +148,13 @@ router.put('/:id', (req, res, next) => {
   const userId = req.user.id;
 
   const toUpdate = {};
-  const updateableFields = ['title'];
+  const updateableFields = ['title', 'minPlayers', 'maxPlayers'];
 
   updateableFields.forEach(field => {
-    if (field in req.body) {
+    if ((field === 'minPlayers') || (field === 'maxPlayers')) {
+      toUpdate.players = Object.assign({}, toUpdate.players);
+      field === 'minPlayers' ? toUpdate.players.min = req.body[field] : toUpdate.players.max = req.body[field];
+    } else if (field in req.body) {
       toUpdate[field] = req.body[field];
     }
   });
