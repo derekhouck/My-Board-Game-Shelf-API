@@ -626,7 +626,24 @@ describe('My Board Game Shelf API - Games', function () {
   });
 
   describe('DELETE /api/games/:id', function () {
-    it('should delete an existing game and respond with 204');
+    it('should delete an existing game and respond with 204', function () {
+      let data;
+      return Game.findOne({ userId: user.id })
+        .then(_data => {
+          data = _data;
+
+          return chai.request(app)
+            .delete(`/api/games/${data.id}`)
+            .set('Authorization', `Bearer ${token}`);
+        })
+        .then(res => {
+          expect(res).to.have.status(204);
+          return Game.countDocuments({ _id: data.id });
+        })
+        .then(count => {
+          expect(count).to.equal(0);
+        });
+    });
 
     it('should respond with a 400 for an invalid id');
 

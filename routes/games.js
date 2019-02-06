@@ -198,4 +198,14 @@ router.put('/:id',
       .catch(err => next(err));
   });
 
+// DELETE /api/games/:id
+router.delete('/:id', (req, res, next) => {
+  const { id } = req.params;
+  const userId = req.user.id;
+
+  Game.findOneAndDelete({ _id: id, userId })
+    .then(() => res.sendStatus(204))
+    .catch(err => next(err));
+});
+
 module.exports = router;
