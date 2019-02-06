@@ -4,6 +4,10 @@ const mongoose = require('mongoose');
 
 const schema = new mongoose.Schema({
   title: String,
+  players: {
+    min: Number,
+    max: Number
+  },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
 });
 

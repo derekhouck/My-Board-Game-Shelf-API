@@ -22,46 +22,82 @@ const games = [
   {
     _id: '111111111111111111111101',
     title: 'Candy Land',
+    players: {
+      min: 2,
+      max: 6
+    },
     userId: '000000000000000000000001'
   },
   {
     _id: '111111111111111111111103',
     title: 'Monopoly',
+    players: {
+      min: 2,
+      max: 6
+    },
     userId: '000000000000000000000001'
   },
   {
     _id: '111111111111111111111105',
     title: 'King of New York',
+    players: {
+      min: 2,
+      max: 8
+    },
     userId: '000000000000000000000001'
   },
   {
     _id: '111111111111111111111107',
     title: 'King of Tokyo',
+    players: {
+      min: 2,
+      max: 8
+    },
     userId: '000000000000000000000001'
   },
   {
     _id: '111111111111111111111109',
     title: 'The Resistance',
+    players: {
+      min: 2,
+      max: 6
+    },
     userId: '000000000000000000000001'
   },
   {
     _id: '111111111111111111111102',
     title: 'Tokaido',
+    players: {
+      min: 2,
+      max: 4
+    },
     userId: '000000000000000000000002'
   },
   {
     _id: '111111111111111111111104',
     title: 'Clue',
+    players: {
+      min: 2,
+      max: 8
+    },
     userId: '000000000000000000000002'
   },
   {
     _id: '111111111111111111111106',
     title: 'Battleship',
+    players: {
+      min: 2,
+      max: 2
+    },
     userId: '000000000000000000000002'
   },
   {
     _id: '111111111111111111111108',
     title: 'Sorry!',
+    players: {
+      min: 2,
+      max: 4
+    },
     userId: '000000000000000000000002'
   }
 ];

@@ -117,7 +117,39 @@ describe('My Board Game Shelf API - Games', function () {
         });
     });
 
-    it('should return correct search results for number of players query');
+    it('should return correct search results for number of players query', function () {
+      const players = 7;
+
+      const dbPromise = Game
+        .find({
+          userId: user.id,
+          'players.min': { $lte: players },
+          'players.max': { $gte: players }
+        })
+        .sort({ title: 'asc' });
+
+      const apiPromise = chai.request(app)
+        .get(`/api/games?players=${players}`)
+        .set('Authorization', `Bearer ${token}`);
+
+      return Promise.all([dbPromise, apiPromise])
+        .then(([data, res]) => {
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('array');
+          expect(res.body).to.have.length(data.length);
+          res.body.forEach(function (item, i) {
+            expect(item).to.be.a('object');
+            expect(item).to.include.all.keys('id', 'title', 'createdAt', 'updatedAt', 'players');
+            expect(item.id).to.equal(data[i].id);
+            expect(item.title).to.equal(data[i].title);
+            expect(item.players.min).to.equal(data[i].players.min);
+            expect(item.players.max).to.equal(data[i].players.max);
+            expect(new Date(item.createdAt)).to.eql(data[i].createdAt);
+            expect(new Date(item.updatedAt)).to.eql(data[i].updatedAt);
+          });
+        });
+    });
 
     it('should return an empty array for an incorrect query');
 

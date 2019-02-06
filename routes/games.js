@@ -8,7 +8,7 @@ const router = express.Router();
 
 // GET /api/games
 router.get('/', (req, res, next) => {
-  const { searchTerm } = req.query;
+  const { searchTerm, players } = req.query;
   const userId = req.user.id;
 
   let filter = { userId };
@@ -16,6 +16,11 @@ router.get('/', (req, res, next) => {
   if (searchTerm) {
     const re = new RegExp(searchTerm, 'i');
     filter.title = re;
+  }
+
+  if (players) {
+    filter['players.min'] = { $lte: players };
+    filter['players.max'] = { $gte: players };
   }
 
   Game.find(filter)
