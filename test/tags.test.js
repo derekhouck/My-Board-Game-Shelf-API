@@ -86,7 +86,19 @@ describe.only('My Board Game Shelf API - Tags', function () {
         });
     });
 
-    it('should catch errors and respond properly');
+    it('should catch errors and respond properly', function () {
+      sandbox.stub(Tag.schema.options.toJSON, 'transform').throws('FakeError');
+
+      return chai.request(app)
+        .get('/api/tags')
+        .set('Authorization', `Bearer ${token}`)
+        .then(res => {
+          expect(res).to.have.status(500);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('Internal Server Error');
+        });
+    });
   });
 
   describe('GET /api/tags/:id', function () {
