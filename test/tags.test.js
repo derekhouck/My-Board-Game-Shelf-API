@@ -19,7 +19,8 @@ chai.use(chaiHttp);
 const expect = chai.expect;
 const sandbox = sinon.createSandbox();
 
-describe('My Board Game Shelf API - Tags', function () {
+// TODO: Remove `.only` from this line!
+describe.only('My Board Game Shelf API - Tags', function () {
   let user = {};
   let token;
 
@@ -46,7 +47,20 @@ describe('My Board Game Shelf API - Tags', function () {
   after(() => dbDisconnect()); 
 
   describe('GET /api/tags', function () {
-    it('should return the correct number of tags');
+    it('should return the correct number of tags', function () {
+      return Promise.all([
+        Tag.find({ userId: user.id }),
+        chai.request(app)
+          .get('/api/tags')
+          .set('Authorization', `Bearer ${token}`)
+      ])
+        .then(([data, res]) => {
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('array');
+          expect(res.body).to.have.length(data.length);
+        });
+    });
 
     it('shold return a list sorted by name with the correct fields and values');
 
