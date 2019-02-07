@@ -201,9 +201,8 @@ router.put('/:id',
 // DELETE /api/games/:id
 router.delete('/:id', isValidId, (req, res, next) => {
   const { id } = req.params;
-  const userId = req.user.id;
 
-  Game.findOneAndDelete({ _id: id, userId })
+  Game.findOneAndDelete({ _id: id })
     .then(() => res.sendStatus(204))
     .catch(err => next(err));
 });

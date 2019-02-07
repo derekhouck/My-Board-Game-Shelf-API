@@ -2,7 +2,6 @@
 
 const chai = require('chai');
 const chaiHttp = require('chai-http');
-const mongoose = require('mongoose');
 const express = require('express');
 const sinon = require('sinon');
 const jwt = require('jsonwebtoken');
