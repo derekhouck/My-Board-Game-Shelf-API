@@ -102,7 +102,27 @@ describe.only('My Board Game Shelf API - Tags', function () {
   });
 
   describe('GET /api/tags/:id', function () {
-    it('should return correct tags');
+    it('should return correct tags', function () {
+      let data;
+      return Tag.findOne({ userId: user.id })
+        .then(_data => {
+          data = _data;
+          return chai.request(app)
+            .get(`/api/tags/${data.id}`)
+            .set('Authorization', `Bearer ${token}`);
+        })
+        .then((res) => {
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+          expect(res.body).to.be.an('object');
+          expect(res.body).to.have.keys('id', 'name', 'createdAt', 'updatedAt', 'userId');
+          expect(res.body.id).to.equal(data.id);
+          expect(res.body.name).to.equal(data.name);
+          expect(res.body.userId).to.equal(data.userId.toString());
+          expect(new Date(res.body.createdAt)).to.eql(data.createdAt);
+          expect(new Date(res.body.updatedAt)).to.eql(data.updatedAt);
+        });
+    });
 
     it('should respond with a 400 for an invalid id');
 
