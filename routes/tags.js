@@ -28,4 +28,30 @@ router.get('/:id', isValidId, (req, res, next) => {
     .catch(err => next(err));
 });
 
+// POST /api/tags
+router.post('/', (req, res, next) => {
+  const { name } = req.body;
+  const userId = req.user.id;
+
+  const newTag = { name, userId };
+
+  if (!name) {
+    const err = new Error('Missing `name` in request body');
+    err.status = 400;
+    return next(err);
+  }
+
+  Tag.create(newTag)
+    .then(result => {
+      res.location(`${req.originalUrl}/${result.id}`).status(201).json(result);
+    })
+    .catch(err => {
+      if (err.code === 11000) {
+        err = new Error('Tag name already exists');
+        err.status = 400;
+      }
+      next(err);
+    });
+});
+
 module.exports = router;

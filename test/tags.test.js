@@ -31,7 +31,8 @@ describe.only('My Board Game Shelf API - Tags', function () {
       User.insertMany(users),
       Game.insertMany(games),
       Tag.insertMany(tags),
-      User.createIndexes()
+      User.createIndexes(),
+      Tag.createIndexes()
     ])
       .then(([users]) => {
         user = users[0];
@@ -163,15 +164,92 @@ describe.only('My Board Game Shelf API - Tags', function () {
   });
 
   describe('POST /api/tags', function () {
-    it('should create and return a new item when provided valid data');
+    it('should create and return a new item when provided valid data', function () {
+      const newItem = { name: 'newTag' };
+      let body;
+      return chai.request(app)
+        .post('/api/tags')
+        .set('Authorization', `Bearer ${token}`)
+        .send(newItem)
+        .then(function (res) {
+          body = res.body;
+          expect(res).to.have.status(201);
+          expect(res).to.have.header('location');
+          expect(res).to.be.json;
+          expect(body).to.be.a('object');
+          expect(body).to.have.keys('id', 'name', 'createdAt', 'updatedAt', 'userId');
+          return Tag.findOne({ userId: user.id, _id: body.id });
+        })
+        .then(data => {
+          expect(body.id).to.equal(data.id);
+          expect(body.name).to.equal(data.name);
+          expect(body.userId).to.equal(data.userId.toString());
+          expect(new Date(body.createdAt)).to.eql(data.createdAt);
+          expect(new Date(body.updatedAt)).to.eql(data.updatedAt);
+        });
+    });
 
-    it('should return an error when missing "name" field');
+    it('should return an error when missing "name" field', function () {
+      const newItem = {};
+      return chai.request(app)
+        .post('/api/tags')
+        .set('Authorization', `Bearer ${token}`)
+        .send(newItem)
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('Missing `name` in request body');
+        });
+    });
 
-    it('should return an error when "name" field is empty string');
+    it('should return an error when "name" field is empty string', function () {
+      const newItem = { name: '' };
+      return chai.request(app)
 
-    it('should return an error when given a duplicate name');
+        .post('/api/tags')
+        .set('Authorization', `Bearer ${token}`)
+        .send(newItem)
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('Missing `name` in request body');
+        });
+    });
 
-    it('should catch errors and respond properly');
+    it('should return an error when given a duplicate name', function () {
+      return Tag.findOne({ userId: user.id })
+        .then(data => {
+          const newItem = { name: data.name };
+          return chai.request(app)
+            .post('/api/tags')
+            .set('Authorization', `Bearer ${token}`)
+            .send(newItem);
+        })
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('Tag name already exists');
+        });
+    });
+
+    it('should catch errors and respond properly', function () {
+      sandbox.stub(Tag.schema.options.toJSON, 'transform').throws('FakeError');
+
+      const newItem = { name: 'newTag' };
+      return chai.request(app)
+        .post('/api/tags')
+        .set('Authorization', `Bearer ${token}`)
+        .send(newItem)
+        .then(res => {
+          expect(res).to.have.status(500);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('Internal Server Error');
+        });
+    });
   });
 
   describe('PUT /api/tags/:id', function () {
