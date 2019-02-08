@@ -124,11 +124,42 @@ describe.only('My Board Game Shelf API - Tags', function () {
         });
     });
 
-    it('should respond with a 400 for an invalid id');
+    it('should respond with a 400 for an invalid id', function () {
+      return chai.request(app)
+        .get('/api/tags/NOT-A-VALID-ID')
+        .set('Authorization', `Bearer ${token}`)
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res.body.message).to.equal('The `id` is not valid');
+        });
+    });
 
-    it('should respond with a 404 for an id that does not exist');
+    it('should respond with a 404 for an id that does not exist', function () {
+      // The string "DOESNOTEXIST" is 12 bytes which is a valid Mongo ObjectId
+      return chai.request(app)
+        .get('/api/tags/DOESNOTEXIST')
+        .set('Authorization', `Bearer ${token}`)
+        .then(res => {
+          expect(res).to.have.status(404);
+        });
+    });
 
-    it('should catch errors and respond properly');
+    it('should catch errors and respond properly', function () {
+      sandbox.stub(Tag.schema.options.toJSON, 'transform').throws('FakeError');
+
+      return Tag.findOne()
+        .then(data => {
+          return chai.request(app)
+            .get(`/api/tags/${data.id}`)
+            .set('Authorization', `Bearer ${token}`);
+        })
+        .then(res => {
+          expect(res).to.have.status(500);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('Internal Server Error');
+        });
+    });
   });
 
   describe('POST /api/tags', function () {
