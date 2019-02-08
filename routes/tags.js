@@ -2,6 +2,7 @@
 
 const express = require('express');
 
+const Game = require('../models/game');
 const Tag = require('../models/tag');
 
 const { isValidId } = require('./validators');
@@ -87,5 +88,22 @@ router.put('/:id',
         next(err);
       });
   });
+
+// DELETE /api/games/:id
+router.delete('/:id', isValidId, (req, res, next) => {
+  const { id } = req.params;
+  const userId = req.user.id;
+
+  const tagRemovePromise = Tag.findOneAndDelete({ _id: id, userId });
+
+  const gameUpdatePromise = Game.updateMany(
+    { tags: id, userId },
+    { $pull: { tags: id } }
+  );
+
+  Promise.all([tagRemovePromise, gameUpdatePromise])
+    .then(() => res.sendStatus(204))
+    .catch(err => next(err));
+});
 
 module.exports = router;

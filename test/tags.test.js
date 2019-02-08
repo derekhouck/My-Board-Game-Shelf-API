@@ -19,8 +19,7 @@ chai.use(chaiHttp);
 const expect = chai.expect;
 const sandbox = sinon.createSandbox();
 
-// TODO: Remove `.only` from this line!
-describe.only('My Board Game Shelf API - Tags', function () {
+describe('My Board Game Shelf API - Tags', function () {
   let user = {};
   let token;
 
@@ -46,7 +45,7 @@ describe.only('My Board Game Shelf API - Tags', function () {
     return dbDrop();
   });
 
-  after(() => dbDisconnect()); 
+  after(() => dbDisconnect());
 
   describe('GET /api/tags', function () {
     it('should return the correct number of tags', function () {
@@ -381,12 +380,69 @@ describe.only('My Board Game Shelf API - Tags', function () {
   });
 
   describe('DELETE /api/tags/:id', function () {
-    it('should delete an existing tag and respond with 204');
+    it('should delete an existing tag and respond with 204', function () {
+      let data;
+      return Tag.findOne({ userId: user.id })
+        .then(_data => {
+          data = _data;
+          return chai.request(app)
+            .delete(`/api/tags/${data.id}`)
+            .set('Authorization', `Bearer ${token}`);
+        })
+        .then(function (res) {
+          expect(res).to.have.status(204);
+          expect(res.body).to.be.empty;
+          return Tag.countDocuments({ _id: data.id });
+        })
+        .then(count => {
+          expect(count).to.equal(0);
+        });
+    });
 
-    it('should delete an existing tag and remove tag reference from note');
+    it('should delete an existing tag and remove tag reference from game', function () {
+      let tagId;
+      return Game.findOne({ tags: { $exists: true, $ne: [] } })
+        .then(data => {
+          tagId = data.tags[0];
 
-    it('should respond with a 400 for an invalid id');
+          return chai.request(app)
+            .delete(`/api/tags/${tagId}`)
+            .set('Authorization', `Bearer ${token}`);
+        })
+        .then(function (res) {
+          expect(res).to.have.status(204);
+          expect(res.body).to.be.empty;
+          return Game.countDocuments({ tags: tagId });
+        })
+        .then(count => {
+          expect(count).to.equal(0);
+        });
+    });
 
-    it('should catch errors and respond properly');
+    it('should respond with a 400 for an invalid id', function () {
+      return chai.request(app)
+        .delete('/api/tags/NOT-A-VALID-ID')
+        .set('Authorization', `Bearer ${token}`)
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res.body.message).to.equal('The `id` is not valid');
+        });
+    });
+
+    it('should catch errors and respond properly', function () {
+      sandbox.stub(express.response, 'sendStatus').throws('FakeError');
+      return Tag.findOne()
+        .then(data => {
+          return chai.request(app)
+            .delete(`/api/tags/${data.id}`)
+            .set('Authorization', `Bearer ${token}`);
+        })
+        .then(res => {
+          expect(res).to.have.status(500);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('Internal Server Error');
+        });
+    });
   });
 });
