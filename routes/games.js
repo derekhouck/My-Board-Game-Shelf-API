@@ -97,6 +97,7 @@ router.get('/', (req, res, next) => {
   }
 
   Game.find(filter)
+    .populate('tags')
     .sort({ title: 'asc' })
     .then(results => res.json(results))
     .catch(err => next(err));
@@ -108,6 +109,7 @@ router.get('/:id', isValidId, (req, res, next) => {
   const userId = req.user.id;
 
   Game.findOne({ _id: id, userId })
+    .populate('tags')
     .then(result => {
       if (result) {
         res.json(result);
