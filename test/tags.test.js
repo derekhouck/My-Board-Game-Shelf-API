@@ -50,7 +50,7 @@ describe('My Board Game Shelf API - Tags', function () {
   describe('GET /api/tags', function () {
     it('should return the correct number of tags', function () {
       return Promise.all([
-        Tag.find({ userId: user.id }),
+        Tag.find(),
         chai.request(app)
           .get('/api/tags')
           .set('Authorization', `Bearer ${token}`)
@@ -65,7 +65,7 @@ describe('My Board Game Shelf API - Tags', function () {
 
     it('shold return a list sorted by name with the correct fields and values', function () {
       return Promise.all([
-        Tag.find({ userId: user.id }).sort('name'),
+        Tag.find().sort('name'),
         chai.request(app)
           .get('/api/tags')
           .set('Authorization', `Bearer ${token}`)
@@ -77,10 +77,9 @@ describe('My Board Game Shelf API - Tags', function () {
           expect(res.body).to.have.length(data.length);
           res.body.forEach(function (item, i) {
             expect(item).to.be.a('object');
-            expect(item).to.have.all.keys('id', 'name', 'createdAt', 'updatedAt', 'userId');
+            expect(item).to.have.all.keys('id', 'name', 'createdAt', 'updatedAt');
             expect(item.id).to.equal(data[i].id);
             expect(item.name).to.equal(data[i].name);
-            expect(item.userId).to.equal(data[i].userId.toString());
             expect(new Date(item.createdAt)).to.eql(data[i].createdAt);
             expect(new Date(item.updatedAt)).to.eql(data[i].updatedAt);
           });
@@ -105,7 +104,7 @@ describe('My Board Game Shelf API - Tags', function () {
   describe('GET /api/tags/:id', function () {
     it('should return correct tags', function () {
       let data;
-      return Tag.findOne({ userId: user.id })
+      return Tag.findOne()
         .then(_data => {
           data = _data;
           return chai.request(app)
@@ -116,10 +115,9 @@ describe('My Board Game Shelf API - Tags', function () {
           expect(res).to.have.status(200);
           expect(res).to.be.json;
           expect(res.body).to.be.an('object');
-          expect(res.body).to.have.keys('id', 'name', 'createdAt', 'updatedAt', 'userId');
+          expect(res.body).to.have.keys('id', 'name', 'createdAt', 'updatedAt');
           expect(res.body.id).to.equal(data.id);
           expect(res.body.name).to.equal(data.name);
-          expect(res.body.userId).to.equal(data.userId.toString());
           expect(new Date(res.body.createdAt)).to.eql(data.createdAt);
           expect(new Date(res.body.updatedAt)).to.eql(data.updatedAt);
         });
@@ -177,13 +175,12 @@ describe('My Board Game Shelf API - Tags', function () {
           expect(res).to.have.header('location');
           expect(res).to.be.json;
           expect(body).to.be.a('object');
-          expect(body).to.have.keys('id', 'name', 'createdAt', 'updatedAt', 'userId');
-          return Tag.findOne({ userId: user.id, _id: body.id });
+          expect(body).to.have.keys('id', 'name', 'createdAt', 'updatedAt');
+          return Tag.findOne({ _id: body.id });
         })
         .then(data => {
           expect(body.id).to.equal(data.id);
           expect(body.name).to.equal(data.name);
-          expect(body.userId).to.equal(data.userId.toString());
           expect(new Date(body.createdAt)).to.eql(data.createdAt);
           expect(new Date(body.updatedAt)).to.eql(data.updatedAt);
         });
@@ -219,7 +216,7 @@ describe('My Board Game Shelf API - Tags', function () {
     });
 
     it('should return an error when given a duplicate name', function () {
-      return Tag.findOne({ userId: user.id })
+      return Tag.findOne()
         .then(data => {
           const newItem = { name: data.name };
           return chai.request(app)
@@ -256,7 +253,7 @@ describe('My Board Game Shelf API - Tags', function () {
     it('should update the tag', function () {
       const updateItem = { name: 'Updated Name' };
       let data;
-      return Tag.findOne({ userId: user.id })
+      return Tag.findOne()
         .then(_data => {
           data = _data;
           return chai.request(app)
@@ -268,10 +265,9 @@ describe('My Board Game Shelf API - Tags', function () {
           expect(res).to.have.status(200);
           expect(res).to.be.json;
           expect(res.body).to.be.a('object');
-          expect(res.body).to.have.keys('id', 'name', 'createdAt', 'updatedAt', 'userId');
+          expect(res.body).to.have.keys('id', 'name', 'createdAt', 'updatedAt');
           expect(res.body.id).to.equal(data.id);
           expect(res.body.name).to.equal(updateItem.name);
-          expect(res.body.userId).to.equal(data.userId.toString());
           expect(new Date(res.body.createdAt)).to.eql(data.createdAt);
           // expect item to have been updated
           expect(new Date(res.body.updatedAt)).to.greaterThan(data.updatedAt);
@@ -306,7 +302,7 @@ describe('My Board Game Shelf API - Tags', function () {
     it('should return an error when missing "name" field', function () {
       const updateItem = {};
       let data;
-      return Tag.findOne({ userId: user.id })
+      return Tag.findOne()
         .then(_data => {
           data = _data;
           return chai.request(app)
@@ -342,7 +338,7 @@ describe('My Board Game Shelf API - Tags', function () {
     });
 
     it('should return an error when given a duplicate name', function () {
-      return Tag.find({ userId: user.id }).limit(2)
+      return Tag.find().limit(2)
         .then(results => {
           const [item1, item2] = results;
           item1.name = item2.name;
@@ -382,7 +378,7 @@ describe('My Board Game Shelf API - Tags', function () {
   describe('DELETE /api/tags/:id', function () {
     it('should delete an existing tag and respond with 204', function () {
       let data;
-      return Tag.findOne({ userId: user.id })
+      return Tag.findOne()
         .then(_data => {
           data = _data;
           return chai.request(app)

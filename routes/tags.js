@@ -23,9 +23,8 @@ const router = express.Router();
 
 // GET /api/tags
 router.get('/', (req, res, next) => {
-  const userId = req.user.id;
 
-  Tag.find({ userId })
+  Tag.find()
     .sort({ name: 'asc' })
     .then(results => res.json(results))
     .catch(err => next(err));
@@ -34,9 +33,8 @@ router.get('/', (req, res, next) => {
 // GET /api/tags/:id
 router.get('/:id', isValidId, (req, res, next) => {
   const { id } = req.params;
-  const userId = req.user.id;
 
-  Tag.findOne({ _id: id, userId })
+  Tag.findOne({ _id: id })
     .then(result => result ? res.json(result) : next())
     .catch(err => next(err));
 });
@@ -44,9 +42,8 @@ router.get('/:id', isValidId, (req, res, next) => {
 // POST /api/tags
 router.post('/', missingName, (req, res, next) => {
   const { name } = req.body;
-  const userId = req.user.id;
 
-  const newTag = { name, userId };
+  const newTag = { name };
 
   Tag.create(newTag)
     .then(result => {
@@ -68,11 +65,10 @@ router.put('/:id',
   (req, res, next) => {
     const { id } = req.params;
     const { name } = req.body;
-    const userId = req.user.id;
 
-    const updateTag = { name, userId };
+    const updateTag = { name };
 
-    Tag.findOneAndUpdate({ _id: id, userId }, updateTag, { new: true })
+    Tag.findOneAndUpdate({ _id: id }, updateTag, { new: true })
       .then(result => {
         if (result) {
           res.json(result);
@@ -92,12 +88,11 @@ router.put('/:id',
 // DELETE /api/games/:id
 router.delete('/:id', isValidId, (req, res, next) => {
   const { id } = req.params;
-  const userId = req.user.id;
 
-  const tagRemovePromise = Tag.findOneAndDelete({ _id: id, userId });
+  const tagRemovePromise = Tag.findOneAndDelete({ _id: id });
 
   const gameUpdatePromise = Game.updateMany(
-    { tags: id, userId },
+    { tags: id },
     { $pull: { tags: id } }
   );
 

@@ -59,8 +59,7 @@ const validateTagIds = (tags, userId) => {
   return Tag.countDocuments({
     $and: [
       {
-        _id: { $in: tags },
-        userId
+        _id: { $in: tags }
       }
     ]
   })

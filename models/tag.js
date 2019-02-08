@@ -4,7 +4,6 @@ const mongoose = require('mongoose');
 
 const schema = new mongoose.Schema({
   name: { type: String, unique: true },
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
 });
 
 // Add `createdAt` and `updatedAt` fields
