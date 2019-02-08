@@ -24,7 +24,8 @@ describe.only('My Board Game Shelf API - Tags', function () {
   let user = {};
   let token;
 
-  before(() => dbConnect(TEST_DATABASE_URL));
+  before(() => dbConnect(TEST_DATABASE_URL)
+    .then(() => dbDrop()));
 
   beforeEach(() => {
     return Promise.all([
@@ -253,19 +254,130 @@ describe.only('My Board Game Shelf API - Tags', function () {
   });
 
   describe('PUT /api/tags/:id', function () {
-    it('should update the tag');
+    it('should update the tag', function () {
+      const updateItem = { name: 'Updated Name' };
+      let data;
+      return Tag.findOne({ userId: user.id })
+        .then(_data => {
+          data = _data;
+          return chai.request(app)
+            .put(`/api/tags/${data.id}`)
+            .set('Authorization', `Bearer ${token}`)
+            .send(updateItem);
+        })
+        .then(function (res) {
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body).to.have.keys('id', 'name', 'createdAt', 'updatedAt', 'userId');
+          expect(res.body.id).to.equal(data.id);
+          expect(res.body.name).to.equal(updateItem.name);
+          expect(res.body.userId).to.equal(data.userId.toString());
+          expect(new Date(res.body.createdAt)).to.eql(data.createdAt);
+          // expect item to have been updated
+          expect(new Date(res.body.updatedAt)).to.greaterThan(data.updatedAt);
+        });
+    });
 
-    it('should respond with a 400 for an invalid id');
+    it('should respond with a 400 for an invalid id', function () {
+      const updateItem = { name: 'Blah' };
 
-    it('should respond with a 404 for an id that does not exist');
+      return chai.request(app)
+        .put('/api/tags/NOT-A-VALID-ID')
+        .set('Authorization', `Bearer ${token}`)
+        .send(updateItem)
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res.body.message).to.equal('The `id` is not valid');
+        });
+    });
 
-    it('should return an error when missing "name" field');
+    it('should respond with a 404 for an id that does not exist', function () {
+      const updateItem = { name: 'Blah' };
+      // The string "DOESNOTEXIST" is 12 bytes which is a valid Mongo ObjectId
+      return chai.request(app)
+        .put('/api/tags/DOESNOTEXIST')
+        .set('Authorization', `Bearer ${token}`)
+        .send(updateItem)
+        .then(res => {
+          expect(res).to.have.status(404);
+        });
+    });
 
-    it('should return an error when "name" field is empty string');
+    it('should return an error when missing "name" field', function () {
+      const updateItem = {};
+      let data;
+      return Tag.findOne({ userId: user.id })
+        .then(_data => {
+          data = _data;
+          return chai.request(app)
+            .put(`/api/tags/${data.id}`)
+            .set('Authorization', `Bearer ${token}`)
+            .send(updateItem);
+        })
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('Missing `name` in request body');
+        });
+    });
 
-    it('should return an error when given a duplicate name');
+    it('should return an error when "name" field is empty string', function () {
+      const updateItem = { name: '' };
+      let data;
+      return Tag.findOne()
+        .then(_data => {
+          data = _data;
+          return chai.request(app)
+            .put(`/api/tags/${data.id}`)
+            .set('Authorization', `Bearer ${token}`)
+            .send(updateItem);
+        })
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('Missing `name` in request body');
+        });
+    });
 
-    it('should catch errors and respond properly');
+    it('should return an error when given a duplicate name', function () {
+      return Tag.find({ userId: user.id }).limit(2)
+        .then(results => {
+          const [item1, item2] = results;
+          item1.name = item2.name;
+          return chai.request(app)
+            .put(`/api/tags/${item1.id}`)
+            .set('Authorization', `Bearer ${token}`)
+            .send(item1);
+        })
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('Tag name already exists');
+        });
+    });
+
+    it('should catch errors and respond properly', function () {
+      sandbox.stub(Tag.schema.options.toJSON, 'transform').throws('FakeError');
+
+      const updateItem = { name: 'Updated Name' };
+      return Tag.findOne()
+        .then(data => {
+          return chai.request(app)
+            .put(`/api/tags/${data.id}`)
+            .set('Authorization', `Bearer ${token}`)
+            .send(updateItem);
+        })
+        .then(res => {
+          expect(res).to.have.status(500);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('Internal Server Error');
+        });
+    });
   });
 
   describe('DELETE /api/tags/:id', function () {
