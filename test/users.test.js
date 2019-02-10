@@ -329,7 +329,7 @@ describe('My Board Game Shelf API - Users', function () {
   });
 
   describe.only('DELETE /api/users', function () {
-    it.only('should delete the logged in user and respond with 204', function () {
+    it('should delete the logged in user and respond with 204', function () {
       return chai.request(app)
         .delete(`/api/users/${user.id}`)
         .set('Authorization', `Bearer ${token}`)
@@ -342,7 +342,41 @@ describe('My Board Game Shelf API - Users', function () {
         });
     });
 
-    it('should delete an existing user and remove all of their games');
+    it('should delete an existing user and remove all of their games', function () {
+      let allGames;
+      return Promise.all([
+        Game.find(),
+        Game.find({ userId: user.id })
+      ])
+        .then(([_allGames, userGames ]) => {
+          allGames = _allGames;
+
+          expect(allGames).to.be.an('array');
+          expect(userGames).to.be.an('array');
+          expect(allGames).to.not.have.length(0);
+          expect(userGames).to.not.have.length(0);
+          expect(allGames.length).to.not.equal(userGames.length);
+          userGames.forEach(game => {
+            expect(game.userId.toString()).to.equal(user.id.toString());
+          });
+          return chai.request(app)
+            .delete(`/api/users/${user.id}`)
+            .set('Authorization', `Bearer ${token}`);
+        })
+        .then(res => {
+          expect(res).to.have.status(204);
+          expect(res.body).to.be.empty;
+          return Promise.all([
+            Game.countDocuments(),
+            Game.countDocuments({ userId: user.id })
+          ]);
+        })
+        .then(([allGamesCount, userGamesCount]) => {
+          expect(userGamesCount).to.equal(0);
+          expect(allGamesCount).to.not.equal(0);
+          expect(allGamesCount).to.not.equal(allGames.length);
+        });
+    });
 
     it('should respond with a 400 for an invalid id');
 

@@ -4,6 +4,7 @@ const express = require('express');
 const passport = require('passport');
 
 const User = require('../models/user');
+const Game = require('../models/game');
 
 const router = express.Router();
 
@@ -115,10 +116,13 @@ router.get('/', jwtAuth, (req, res, next) => {
 });
 
 // DELETE /api/users/:id
-router.delete('/:id', (req, res, next) => {
+router.delete('/:id', jwtAuth, (req, res, next) => {
   const { id } = req.params;
 
-  User.findOneAndDelete({ _id: id })
+  const userRemovePromise = User.findOneAndDelete({ _id: id });
+  const gamesRemovePromise = Game.deleteMany({ userId: id });
+
+  Promise.all([userRemovePromise, gamesRemovePromise])
     .then(() => res.sendStatus(204))
     .catch(err => next(err));
 });
