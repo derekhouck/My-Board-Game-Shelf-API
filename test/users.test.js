@@ -3,6 +3,7 @@
 const app = require('../index');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
+const express = require('express');
 const jwt = require('jsonwebtoken');
 const sinon = require('sinon');
 
@@ -43,6 +44,7 @@ describe('My Board Game Shelf API - Users', function () {
   });
 
   afterEach(function () {
+    sandbox.restore();
     return dbDrop();
   });
 
@@ -328,7 +330,7 @@ describe('My Board Game Shelf API - Users', function () {
     });
   });
 
-  describe.only('DELETE /api/users', function () {
+  describe('DELETE /api/users', function () {
     it('should delete the logged in user and respond with 204', function () {
       return chai.request(app)
         .delete(`/api/users/${user.id}`)
@@ -348,7 +350,7 @@ describe('My Board Game Shelf API - Users', function () {
         Game.find(),
         Game.find({ userId: user.id })
       ])
-        .then(([_allGames, userGames ]) => {
+        .then(([_allGames, userGames]) => {
           allGames = _allGames;
 
           expect(allGames).to.be.an('array');
@@ -378,10 +380,66 @@ describe('My Board Game Shelf API - Users', function () {
         });
     });
 
-    it('should respond with a 400 for an invalid id');
+    it('should respond with a 400 for an invalid id', function () {
+      return chai.request(app)
+        .delete('/api/users/NOT-A-VALID-ID')
+        .set('Authorization', `Bearer ${token}`)
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res.body.message).to.equal('The `id` is not valid');
+        });
+    });
 
-    it('should respond with a 400 when given a different user id');
+    it('should respond with a 400 when given a different user id', function () {
+      let user2 = {};
+      let user2Games;
+      return User.find()
+        .then(users => {
+          expect(users).to.be.an('Array');
+          const filteredUsers = users.filter(unfilteredUser => unfilteredUser.id !== user.id);
+          expect(filteredUsers.length).to.not.equal(0);
+          user2 = filteredUsers[0];
+          expect(user2).to.be.an('object');
+          expect(user2.id).to.not.equal(user.id);
+          expect(user2.username).to.not.equal(user.username);
+          return Game.find({ userId: user2.id });
+        })
+        .then(games => {
+          user2Games = games;
+          expect(user2Games).to.be.an('Array');
+          expect(user2Games).to.not.have.length(0);
+          user2Games.forEach(game => {
+            expect(game.userId.toString()).to.equal(user2.id.toString());
+          });
+          return chai.request(app)
+            .delete(`/api/users/${user2.id}`)
+            .set('Authorization', `Bearer ${token}`);
+        })
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res.body.message).to.equal('You cannot delete another user\'s account');
+          return Promise.all([
+            User.countDocuments({ _id: user2.id }),
+            Game.countDocuments({ userId: user2.id })
+          ]);
+        })
+        .then(([userCount, gamesCount]) => {
+          expect(userCount).to.equal(1);
+          expect(gamesCount).to.equal(user2Games.length);
+        });
+    });
 
-    it('should catch errors and respond properly');
+    it('should catch errors and respond properly', function () {
+      sandbox.stub(express.response, 'sendStatus').throws('FakeError');
+      return chai.request(app)
+        .delete(`/api/games/${user.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .then(res => {
+          expect(res).to.have.status(500);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('Internal Server Error');
+        });
+    });
   });
 });

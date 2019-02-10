@@ -6,6 +6,8 @@ const passport = require('passport');
 const User = require('../models/user');
 const Game = require('../models/game');
 
+const { isValidId } = require ('./validators');
+
 const router = express.Router();
 
 const jwtAuth = passport.authenticate('jwt', { session: false, failWithError: true });
@@ -116,8 +118,14 @@ router.get('/', jwtAuth, (req, res, next) => {
 });
 
 // DELETE /api/users/:id
-router.delete('/:id', jwtAuth, (req, res, next) => {
+router.delete('/:id', jwtAuth, isValidId, (req, res, next) => {
   const { id } = req.params;
+
+  if (id !== req.user.id) {
+    const err = new Error('You cannot delete another user\'s account');
+    err.status = 400;
+    return next(err);
+  }
 
   const userRemovePromise = User.findOneAndDelete({ _id: id });
   const gamesRemovePromise = Game.deleteMany({ userId: id });
