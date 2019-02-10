@@ -9,6 +9,7 @@ const router = express.Router();
 
 const jwtAuth = passport.authenticate('jwt', { session: false, failWithError: true });
 
+// POST /api/users
 router.post('/', (req, res, next) => {
   const requiredFields = ['username', 'password'];
   const missingField = requiredFields.find(field => !(field in req.body));
@@ -105,10 +106,20 @@ router.post('/', (req, res, next) => {
     });
 });
 
+// GET /api/users
 router.get('/', jwtAuth, (req, res, next) => {
   return User
     .find()
     .then(users => res.json(users))
+    .catch(err => next(err));
+});
+
+// DELETE /api/users/:id
+router.delete('/:id', (req, res, next) => {
+  const { id } = req.params;
+
+  User.findOneAndDelete({ _id: id })
+    .then(() => res.sendStatus(204))
     .catch(err => next(err));
 });
 

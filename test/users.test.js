@@ -10,6 +10,9 @@ const { TEST_DATABASE_URL, JWT_SECRET } = require('../config');
 const { dbConnect, dbDisconnect, dbDrop } = require('../db-mongoose');
 
 const User = require('../models/user');
+const Game = require('../models/game');
+
+const { users, games } = require('../db/data');
 
 const expect = chai.expect;
 chai.use(chaiHttp);
@@ -17,6 +20,8 @@ const sandbox = sinon.createSandbox();
 
 
 describe('My Board Game Shelf API - Users', function () {
+  let user = {};
+  let token;
   const username = 'exampleUser';
   const password = 'examplePass';
   const name = 'Example User';
@@ -26,7 +31,15 @@ describe('My Board Game Shelf API - Users', function () {
   });
 
   beforeEach(function () {
-    return User.createIndexes();
+    return Promise.all([
+      User.insertMany(users),
+      Game.insertMany(games),
+      User.createIndexes()
+    ])
+      .then(([users]) => {
+        user = users[0];
+        token = jwt.sign({ user }, JWT_SECRET, { subject: user.username });
+      });
   });
 
   afterEach(function () {
@@ -277,15 +290,18 @@ describe('My Board Game Shelf API - Users', function () {
       return User
         .create(userOne, userTwo)
         .then(() => {
-          return chai
-            .request(app)
-            .get('/api/users')
-            .set('Authorization', `Bearer ${token}`);
+          return Promise.all([
+            User.find(),
+            chai
+              .request(app)
+              .get('/api/users')
+              .set('Authorization', `Bearer ${token}`)
+          ]);
         })
-        .then(res => {
+        .then(([data, res]) => {
           expect(res).to.have.status(200);
           expect(res.body).to.be.an('array');
-          expect(res.body).to.have.length(2);
+          expect(res.body).to.have.length(data.length);
           res.body.forEach(user => {
             expect(user).to.have.keys('id', 'username', 'name');
           });
@@ -313,11 +329,24 @@ describe('My Board Game Shelf API - Users', function () {
   });
 
   describe.only('DELETE /api/users', function () {
-    it('should delete an existing user and respond with 204');
+    it.only('should delete the logged in user and respond with 204', function () {
+      return chai.request(app)
+        .delete(`/api/users/${user.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .then(res => {
+          expect(res).to.have.status(204);
+          return User.countDocuments({ _id: user.id });
+        })
+        .then(count => {
+          expect(count).to.equal(0);
+        });
+    });
 
     it('should delete an existing user and remove all of their games');
 
     it('should respond with a 400 for an invalid id');
+
+    it('should respond with a 400 when given a different user id');
 
     it('should catch errors and respond properly');
   });
