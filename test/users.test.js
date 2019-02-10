@@ -311,4 +311,14 @@ describe('My Board Game Shelf API - Users', function () {
         });
     });
   });
+
+  describe.only('DELETE /api/users', function () {
+    it('should delete an existing user and respond with 204');
+
+    it('should delete an existing user and remove all of their games');
+
+    it('should respond with a 400 for an invalid id');
+
+    it('should catch errors and respond properly');
+  });
 });
