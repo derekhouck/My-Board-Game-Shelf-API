@@ -366,7 +366,39 @@ describe('My Board Game Shelf API - Users', function () {
         });
     });
 
-    it('should update the user when provided a valid password');
+    it('should update the user when provided a valid password', function () {
+      const updateData = { password: 'updatedpassword' };
+      return chai.request(app)
+        .put(`/api/users/${user.id}`)
+        .set('Authorizaton', `Bearer ${token}`)
+        .send(updateData)
+        .then(res => {
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+          expect(res.body).to.be.an('object');
+          expect(res.body).to.include.keys('id', 'name', 'username');
+          expect(res.body.id).to.equal(user.id);
+          expect(res.body.name).to.equal(user.name);
+          expect(res.body.username).to.equal(user.username);
+          return chai.request(app)
+            .post('/api/login')
+            .send({
+              username: user.username,
+              password: updateData.password
+            });
+        })
+        .then(res => {
+          expect(res).to.have.status(200);
+          expect(res.body).to.be.an('object');
+          expect(res.body.authToken).to.be.a('string');
+
+          const payload = jwt.verify(res.body.authToken, JWT_SECRET);
+
+          expect(payload.user).to.not.have.property('password');
+          expect(payload.user.id).to.equal(user.id);
+          expect(payload.user.username).to.deep.equal(user.username);
+        });
+    });
 
     it('should respond with status 400 and an error message when `id` is not valid');
 
