@@ -533,7 +533,21 @@ describe('My Board Game Shelf API - Users', function () {
         });
     });
 
-    it('should return an error when password is greater than 72 characters');
+    it('should return an error when password is greater than 72 characters', function () {
+      return chai
+        .request(app)
+        .put(`/api/users/${user.id}`)
+        .send({ password: 'a'.repeat(73) })
+
+        .then(res => {
+          expect(res).to.have.status(422);
+          expect(res.body.reason).to.equal('ValidationError');
+          expect(res.body.message).to.equal(
+            'Must be at most 72 characters long'
+          );
+          expect(res.body.location).to.equal('password');
+        });
+    });
 
     it('should return an error when username is already taken');
 
