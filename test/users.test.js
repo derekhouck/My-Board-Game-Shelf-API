@@ -350,7 +350,7 @@ describe('My Board Game Shelf API - Users', function () {
     });
 
     it('should update the user when provided a valid username', function () {
-      const updateData = { username: 'updatedusername' };
+      const updateData = { username: 'UpdatedUsername' };
       return chai.request(app)
         .put(`/api/users/${user.id}`)
         .set('Authorizaton', `Bearer ${token}`)
@@ -362,7 +362,7 @@ describe('My Board Game Shelf API - Users', function () {
           expect(res.body).to.include.keys('id', 'name', 'username');
           expect(res.body.id).to.equal(user.id);
           expect(res.body.name).to.equal(user.name);
-          expect(res.body.username).to.equal(updateData.username);
+          expect(res.body.username).to.equal(updateData.username.toLowerCase());
         });
     });
 
@@ -380,23 +380,16 @@ describe('My Board Game Shelf API - Users', function () {
           expect(res.body.id).to.equal(user.id);
           expect(res.body.name).to.equal(user.name);
           expect(res.body.username).to.equal(user.username);
-          return chai.request(app)
-            .post('/api/login')
-            .send({
-              username: user.username,
-              password: updateData.password
-            });
+          return User.findOne({ username: user.username });
         })
-        .then(res => {
-          expect(res).to.have.status(200);
-          expect(res.body).to.be.an('object');
-          expect(res.body.authToken).to.be.a('string');
-
-          const payload = jwt.verify(res.body.authToken, JWT_SECRET);
-
-          expect(payload.user).to.not.have.property('password');
-          expect(payload.user.id).to.equal(user.id);
-          expect(payload.user.username).to.deep.equal(user.username);
+        .then(updatedUser => {
+          expect(updatedUser).to.exist;
+          expect(updatedUser.id).to.equal(user.id);
+          expect(updatedUser.name).to.equal(user.name);
+          return updatedUser.validatePassword(updateData.password);
+        })
+        .then(isValid => {
+          expect(isValid).to.be.true;
         });
     });
 
@@ -428,7 +421,21 @@ describe('My Board Game Shelf API - Users', function () {
         });
     });
 
-    it('should return an error with non-string username');
+    it('should return an error with non-string username', function () {
+      return chai
+        .request(app)
+        .put(`/api/users/${user.id}`)
+        .send({ username: 1234 })
+
+        .then(res => {
+          expect(res).to.have.status(422);
+          expect(res.body.reason).to.equal('ValidationError');
+          expect(res.body.message).to.equal(
+            'Incorrect field type: expected string'
+          );
+          expect(res.body.location).to.equal('username');
+        });
+    });
 
     it('should return an error with non-string name');
 
