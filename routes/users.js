@@ -135,7 +135,7 @@ router.get('/', jwtAuth, (req, res, next) => {
 });
 
 // PUT /api/users/:id
-router.put('/:id', createDigest, (req, res, next) => {
+router.put('/:id', isValidId, createDigest, (req, res, next) => {
   const { id } = req.params;
 
   const toUpdate = {};

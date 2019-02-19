@@ -400,7 +400,19 @@ describe('My Board Game Shelf API - Users', function () {
         });
     });
 
-    it('should respond with status 400 and an error message when `id` is not valid');
+    it('should respond with status 400 and an error message when `id` is not valid', function () {
+      const updateData = {
+        name: 'Updated Name'
+      };
+      return chai.request(app)
+        .put('/api/users/NOT-A-VALID-ID')
+        .set('Authorization', `Bearer ${token}`)
+        .send(updateData)
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res.body.message).to.equal('The `id` is not valid');
+        });
+    });
 
     it('should respond with a 404 for an id that does not exist');
 

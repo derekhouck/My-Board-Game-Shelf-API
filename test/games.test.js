@@ -286,7 +286,7 @@ describe('My Board Game Shelf API - Games', function () {
           expect(res).to.have.header('location');
           expect(res).to.be.json;
           expect(res.body).to.be.a('object');
-          expect(res.body).to.have.all.keys('id', 'title','createdAt', 'updatedAt', 'tags', 'userId');
+          expect(res.body).to.have.all.keys('id', 'title', 'createdAt', 'updatedAt', 'tags', 'userId');
           return Game.findOne({ _id: res.body.id, userId: user.id });
         })
         .then(data => {
@@ -344,14 +344,14 @@ describe('My Board Game Shelf API - Games', function () {
           expect(res).to.be.json;
           expect(res.body).to.be.a('object');
           expect(res.body.message).to.equal('`minPlayers` and `maxPlayers` should be numbers');
-        }); 
+        });
     });
 
     it('should return an error when max players is less than min players', function () {
       const newItem = {
         title: 'Test Game',
         minPlayers: 2,
-        maxPlayers: 1 
+        maxPlayers: 1
       };
       return chai.request(app)
         .post('/api/games')
@@ -362,7 +362,7 @@ describe('My Board Game Shelf API - Games', function () {
           expect(res).to.be.json;
           expect(res.body).to.be.a('object');
           expect(res.body.message).to.equal('`maxPlayers` should not be less than `minPlayers`');
-        }); 
+        });
     });
 
     it('should return an error when a tag `id` is not valid', function () {
@@ -503,7 +503,6 @@ describe('My Board Game Shelf API - Games', function () {
           expect(res).to.have.status(400);
           expect(res.body.message).to.equal('The `id` is not valid');
         });
-
     });
 
     it('should respond with a 404 for an id that does not exist', function () {
@@ -558,13 +557,13 @@ describe('My Board Game Shelf API - Games', function () {
           expect(res).to.be.json;
           expect(res.body).to.be.a('object');
           expect(res.body.message).to.equal('`minPlayers` and `maxPlayers` should be numbers');
-        }); 
+        });
     });
 
     it('should return an error when max players is less than min players', function () {
       const updateItem = {
         minPlayers: 2,
-        maxPlayers: 1 
+        maxPlayers: 1
       };
       let data;
       return Game.findOne({ userId: user.id })
@@ -580,7 +579,7 @@ describe('My Board Game Shelf API - Games', function () {
           expect(res).to.be.json;
           expect(res.body).to.be.a('object');
           expect(res.body.message).to.equal('`maxPlayers` should not be less than `minPlayers`');
-        }); 
+        });
     });
 
     it('should return an error when a tag `id` is not valid', function () {
