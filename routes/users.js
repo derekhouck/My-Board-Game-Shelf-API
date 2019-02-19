@@ -160,9 +160,13 @@ router.put('/:id',
 
     updateableFields.forEach(field => {
       if (field in req.body) {
-        field === 'digest'
-          ? toUpdate['password'] = req.body[field]
-          : toUpdate[field] = req.body[field];
+        if (field === 'digest') {
+          return toUpdate['password'] = req.body[field];
+        } else if (field === 'name') {
+          return toUpdate[field] = req.body[field].trim();
+        } else {
+          return toUpdate[field] = req.body[field];
+        }
       }
     });
 

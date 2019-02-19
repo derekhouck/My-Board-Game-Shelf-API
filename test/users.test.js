@@ -567,7 +567,24 @@ describe('My Board Game Shelf API - Users', function () {
         });
     });
 
-    it('should trim name');
+    it('should trim name', function () {
+      const updatedName = 'Updated Name';
+      return chai
+        .request(app)
+        .put(`/api/users/${user.id}`)
+        .send({ name: ` ${updatedName} ` })
+        .then(res => {
+          expect(res).to.have.status(200);
+          expect(res.body).to.be.an('object');
+          expect(res.body).to.have.keys('id', 'username', 'name');
+          expect(res.body.name).to.equal(updatedName);
+          return User.findOne({ _id: user.id });
+        })
+        .then(user => {
+          expect(user).to.not.be.null;
+          expect(user.name).to.equal(updatedName);
+        });
+    });
 
     it('should catch errors and respond properly');
   });
