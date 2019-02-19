@@ -330,8 +330,7 @@ describe('My Board Game Shelf API - Users', function () {
     });
   });
 
-  // TODO: Remove `.only`
-  describe.only('PUT /api/users', function () {
+  describe('PUT /api/users', function () {
     it('should update the user when provided a valid name', function () {
       const updateData = { name: 'Updated Name' };
       return chai.request(app)
@@ -586,7 +585,23 @@ describe('My Board Game Shelf API - Users', function () {
         });
     });
 
-    it('should catch errors and respond properly');
+    it('should catch errors and respond properly', function () {
+      sandbox.stub(User.schema.options.toJSON, 'transform').throws('FakeError');
+
+      const updateData = {
+        name: 'Updated Name'
+      };
+      return chai.request(app)
+        .put(`/api/users/${user.id}`)
+        .send(updateData)
+        .set('Authorization', `Bearer ${token}`)
+        .then(res => {
+          expect(res).to.have.status(500);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('Internal Server Error');
+        });
+    });
   });
 
   describe('DELETE /api/users', function () {
