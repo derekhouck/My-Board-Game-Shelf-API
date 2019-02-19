@@ -330,6 +330,42 @@ describe('My Board Game Shelf API - Users', function () {
     });
   });
 
+  describe('PUT /api/users', function () {
+    it('should update the user when provided a valid name');
+
+    it('should update the user when provided a valid username');
+
+    it('should update the user when provided a valid password');
+
+    it('should respond with status 400 and an error message when `id` is not valid');
+
+    it('should respond with a 404 for an id that does not exist');
+
+    it('should return an error with non-string username');
+
+    it('should return an error with non-string name');
+
+    it('should return an error with non-string password');
+
+    it('should return an error with non-trimmed username');
+
+    it('should return an error with non-trimmed password');
+
+    it('should return an error when "name" is an empty string');
+
+    it('should return an error when "username" is an empty string');
+
+    it('should return an error when password is less than 8 characters');
+
+    it('should return an error when password is greater than 72 characters');
+
+    it('should return an error when username is already taken');
+
+    it('should trim name');
+
+    it('should catch errors and respond properly');
+  });
+
   describe('DELETE /api/users', function () {
     it('should delete the logged in user and respond with 204', function () {
       return chai.request(app)
