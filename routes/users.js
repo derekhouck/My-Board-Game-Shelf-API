@@ -6,7 +6,7 @@ const passport = require('passport');
 const User = require('../models/user');
 const Game = require('../models/game');
 
-const { isValidId } = require ('./validators');
+const { isValidId } = require('./validators');
 
 const router = express.Router();
 
@@ -114,6 +114,24 @@ router.get('/', jwtAuth, (req, res, next) => {
   return User
     .find()
     .then(users => res.json(users))
+    .catch(err => next(err));
+});
+
+// PUT /api/users/:id
+router.put('/:id', (req, res, next) => {
+  const { id } = req.params;
+
+  const toUpdate = {};
+  const updateableFields = ['name'];
+
+  updateableFields.forEach(field => {
+    if (field in req.body) {
+      toUpdate[field] = req.body[field];
+    }
+  });
+
+  return User.findOneAndUpdate({ _id: id }, toUpdate, { new: true })
+    .then(result => res.json(result))
     .catch(err => next(err));
 });
 
