@@ -332,7 +332,7 @@ describe('My Board Game Shelf API - Users', function () {
 
   // TODO: Remove `.only`
   describe.only('PUT /api/users', function () {
-    it.only('should update the user when provided a valid name', function () {
+    it('should update the user when provided a valid name', function () {
       const updateData = { name: 'Updated Name' };
       return chai.request(app)
         .put(`/api/users/${user.id}`)
@@ -349,7 +349,22 @@ describe('My Board Game Shelf API - Users', function () {
         });
     });
 
-    it('should update the user when provided a valid username');
+    it('should update the user when provided a valid username', function () {
+      const updateData = { username: 'updatedusername' };
+      return chai.request(app)
+        .put(`/api/users/${user.id}`)
+        .set('Authorizaton', `Bearer ${token}`)
+        .send(updateData)
+        .then(res => {
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+          expect(res.body).to.be.an('object');
+          expect(res.body).to.include.keys('id', 'name', 'username');
+          expect(res.body.id).to.equal(user.id);
+          expect(res.body.name).to.equal(user.name);
+          expect(res.body.username).to.equal(updateData.username);
+        });
+    });
 
     it('should update the user when provided a valid password');
 
