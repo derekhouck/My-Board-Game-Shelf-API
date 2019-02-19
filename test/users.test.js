@@ -414,7 +414,19 @@ describe('My Board Game Shelf API - Users', function () {
         });
     });
 
-    it('should respond with a 404 for an id that does not exist');
+    it('should respond with a 404 for an id that does not exist', function () {
+      // The string "DOESNOTEXIST" is 12 bytes which is a valid Mongo ObjectId
+      const updateData = {
+        name: 'Updated Name'
+      };
+      return chai.request(app)
+        .put('/api/users/DOESNOTEXIST')
+        .set('Authorization', `Bearer ${token}`)
+        .send(updateData)
+        .then(res => {
+          expect(res).to.have.status(404);
+        });
+    });
 
     it('should return an error with non-string username');
 

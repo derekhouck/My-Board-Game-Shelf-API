@@ -150,7 +150,9 @@ router.put('/:id', isValidId, createDigest, (req, res, next) => {
   });
 
   return User.findOneAndUpdate({ _id: id }, toUpdate, { new: true })
-    .then(result => res.json(result))
+    .then(result => {
+      result ? res.json(result) : next();
+    })
     .catch(err => next(err));
 });
 
