@@ -453,7 +453,21 @@ describe('My Board Game Shelf API - Users', function () {
         });
     });
 
-    it('should return an error with non-string password');
+    it('should return an error with non-string password', function () {
+      return chai
+        .request(app)
+        .put(`/api/users/${user.id}`)
+        .send({ password: 1234 })
+
+        .then(res => {
+          expect(res).to.have.status(422);
+          expect(res.body.reason).to.equal('ValidationError');
+          expect(res.body.message).to.equal(
+            'Incorrect field type: expected string'
+          );
+          expect(res.body.location).to.equal('password');
+        });
+    });
 
     it('should return an error with non-trimmed username');
 
