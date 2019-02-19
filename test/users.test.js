@@ -501,9 +501,21 @@ describe('My Board Game Shelf API - Users', function () {
         });
     });
 
-    it('should return an error when "name" is an empty string');
+    it('should return an error when "username" is an empty string', function () {
+      return chai
+        .request(app)
+        .put(`/api/users/${user.id}`)
+        .send({ username: '' })
 
-    it('should return an error when "username" is an empty string');
+        .then(res => {
+          expect(res).to.have.status(422);
+          expect(res.body.reason).to.equal('ValidationError');
+          expect(res.body.message).to.equal(
+            'Must be at least 1 characters long'
+          );
+          expect(res.body.location).to.equal('username');
+        });
+    });
 
     it('should return an error when password is less than 8 characters');
 

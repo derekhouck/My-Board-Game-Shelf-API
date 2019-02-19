@@ -47,6 +47,42 @@ const validateTrimmedFields = (req, res, next) => {
   }
 };
 
+const validateFieldSizes = (req, res, next) => {
+  const sizedFields = {
+    username: { min: 1 },
+    password: { min: 8, max: 72 }
+  };
+
+  const objToTest = {};
+  Object.keys(sizedFields).forEach(field => {
+    if (field in req.body) {
+      objToTest[field] = sizedFields[field];
+    }
+  });
+
+  const tooSmallField = Object.keys(objToTest).find(
+    field => 'min' in sizedFields[field] &&
+      req.body[field].trim().length < sizedFields[field].min
+  );
+
+  const tooLargeField = Object.keys(objToTest).find(
+    field => 'max' in sizedFields[field] &&
+      req.body[field].trim().length > sizedFields[field].max
+  );
+
+  if (tooSmallField || tooLargeField) {
+    const num = tooSmallField ? sizedFields[tooSmallField].min : sizedFields[tooLargeField].max;
+    const err = new Error('');
+    err.status = 422;
+    err.reason = 'ValidationError';
+    err.message = `Must be at ${tooSmallField ? 'least' : 'most'} ${num} characters long`;
+    err.location = tooSmallField || tooLargeField;
+    return next(err);
+  } else {
+    return next();
+  }
+};
+
 const createDigest = (req, res, next) => {
   const { password } = req.body;
   if (password) {
@@ -64,6 +100,7 @@ const createDigest = (req, res, next) => {
 router.post('/',
   validateStringFields,
   validateTrimmedFields,
+  validateFieldSizes,
   createDigest,
   (req, res, next) => {
     const requiredFields = ['username', 'password'];
@@ -74,31 +111,6 @@ router.post('/',
       err.status = 422;
       err.reason = 'ValidationError';
       err.location = missingField;
-      return next(err);
-    }
-
-    const sizedFields = {
-      username: { min: 1 },
-      password: { min: 8, max: 72 }
-    };
-
-    const tooSmallField = Object.keys(sizedFields).find(
-      field => 'min' in sizedFields[field] &&
-        req.body[field].trim().length < sizedFields[field].min
-    );
-
-    const tooLargeField = Object.keys(sizedFields).find(
-      field => 'max' in sizedFields[field] &&
-        req.body[field].trim().length > sizedFields[field].max
-    );
-
-    if (tooSmallField || tooLargeField) {
-      const num = tooSmallField ? sizedFields[tooSmallField].min : sizedFields[tooLargeField].max;
-      const err = new Error('');
-      err.status = 422;
-      err.reason = 'ValidationError';
-      err.message = `Must be at ${tooSmallField ? 'least' : 'most'} ${num} characters long`;
-      err.location = tooSmallField || tooLargeField;
       return next(err);
     }
 
@@ -138,6 +150,7 @@ router.put('/:id',
   isValidId,
   validateStringFields,
   validateTrimmedFields,
+  validateFieldSizes,
   createDigest,
   (req, res, next) => {
     const { id } = req.params;
