@@ -170,7 +170,15 @@ router.put('/:id',
       .then(result => {
         result ? res.json(result) : next();
       })
-      .catch(err => next(err));
+      .catch(err => {
+        if (err.code === 11000) {
+          err = new Error('Username already taken');
+          err.status = 422;
+          err.reason = 'ValidationError';
+          err.location = 'username';
+        }
+        next(err);
+      });
   });
 
 // DELETE /api/users/:id
