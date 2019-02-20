@@ -217,6 +217,7 @@ describe('My Board Game Shelf API - Authentication', function () {
 
           const payload = jwt.verify(authToken, JWT_SECRET);
           expect(payload.user).to.deep.equal({
+            id: _id,
             username: username.toLowerCase(),
             name: newname
           });
