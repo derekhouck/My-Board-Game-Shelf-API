@@ -166,4 +166,62 @@ describe('My Board Game Shelf API - Authentication', function () {
         });
     });
   });
+
+  describe('POST /api/hard-refresh', function () {
+    it('should reject requests with no credentials', function () {
+      return chai.request(app)
+        .post('/api/hard-refresh')
+        .then(res => {
+          expect(res).to.have.status(401);
+        });
+    });
+
+    it('should reject requests with an invalid token', function () {
+      const token = jwt.sign({ username, password, name }, 'Incorrect Secret');
+      return chai.request(app)
+        .post('/api/hard-refresh')
+        .set('Authorization', `Bearer ${token}`)
+        .then(res => {
+          expect(res).to.have.status(401);
+        });
+    });
+
+    it('should reject requests with an expired token', function () {
+      const token = jwt.sign({ username, password, name }, JWT_SECRET, { subject: username, expiresIn: Math.floor(Date.now() / 1000) - 10 });
+      return chai.request(app)
+        .post('/api/hard-refresh')
+        .set('Authorization', `Bearer ${token}`)
+        .then(res => {
+          expect(res).to.have.status(401);
+        });
+    });
+
+    it('should return a valid auth token with user data that matches the database', function () {
+      const user = { username, name };
+      const token = jwt.sign({ user }, JWT_SECRET, { subject: username, expiresIn: '1m' });
+      const decoded = jwt.decode(token);
+      const newname = 'Updated Name';
+      const updateData = { name: newname };
+
+      return User.findOneAndUpdate({ username }, updateData, { new: true })
+        .then(() => {
+          return chai.request(app)
+            .post('/api/hard-refresh')
+            .set('Authorization', `Bearer ${token}`);
+        })
+        .then(res => {
+          expect(res).to.have.status(200);
+          expect(res.body).to.been.an('object');
+          const authToken = res.body.authToken;
+          expect(authToken).to.be.a('string');
+
+          const payload = jwt.verify(authToken, JWT_SECRET);
+          expect(payload.user).to.deep.equal({
+            username: username.toLowerCase(),
+            name: newname
+          });
+          expect(payload.exp).to.be.greaterThan(decoded.exp);
+        });
+    });
+  });
 });
