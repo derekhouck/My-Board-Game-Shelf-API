@@ -32,7 +32,7 @@ router.post('/refresh', jwtAuth, (req, res) => {
 });
 
 router.post('/hard-refresh', jwtAuth, (req, res, next) => {
-  return User.find({ username: req.user.username })
+  return User.find({ _id: req.user.id })
     .then(([user]) => {
       const authToken = createAuthToken({
         id: user.id,

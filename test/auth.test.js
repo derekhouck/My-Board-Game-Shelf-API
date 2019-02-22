@@ -197,13 +197,13 @@ describe('My Board Game Shelf API - Authentication', function () {
     });
 
     it('should return a valid auth token with user data that matches the database', function () {
-      const user = { username, name };
+      const user = { username, name, id: _id };
       const token = jwt.sign({ user }, JWT_SECRET, { subject: username, expiresIn: '1m' });
       const decoded = jwt.decode(token);
       const newname = 'Updated Name';
       const updateData = { name: newname };
 
-      return User.findOneAndUpdate({ username }, updateData, { new: true })
+      return User.findOneAndUpdate({ _id }, updateData, { new: true })
         .then(() => {
           return chai.request(app)
             .post('/api/hard-refresh')
