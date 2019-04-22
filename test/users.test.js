@@ -62,7 +62,7 @@ describe("My Board Game Shelf API - Users", function() {
           res = _res;
           expect(res).to.have.status(201);
           expect(res.body).to.be.an("object");
-          expect(res.body).to.have.keys("id", "username", "name");
+          expect(res.body).to.have.keys("id", "username", "name", "admin");
           expect(res.body.id).to.exist;
           expect(res.body.username).to.equal(username.toLowerCase());
           expect(res.body.name).to.equal(name);
@@ -72,6 +72,7 @@ describe("My Board Game Shelf API - Users", function() {
           expect(user).to.exist;
           expect(user.id).to.equal(res.body.id);
           expect(user.name).to.equal(name);
+          expect(user.admin).to.equal(false);
           return user.validatePassword(password);
         })
         .then(isValid => {
@@ -263,7 +264,7 @@ describe("My Board Game Shelf API - Users", function() {
         .then(res => {
           expect(res).to.have.status(201);
           expect(res.body).to.be.an("object");
-          expect(res.body).to.have.keys("id", "username", "name");
+          expect(res.body).to.include.keys("id", "username", "name");
           expect(res.body.name).to.equal(name);
           return User.findOne({ username });
         })
@@ -303,7 +304,7 @@ describe("My Board Game Shelf API - Users", function() {
           expect(res.body).to.be.an("array");
           expect(res.body).to.have.length(data.length);
           res.body.forEach(user => {
-            expect(user).to.have.keys("id", "username", "name");
+            expect(user).to.have.keys("id", "username", "name", "admin");
           });
         });
     });
@@ -582,7 +583,7 @@ describe("My Board Game Shelf API - Users", function() {
         .then(res => {
           expect(res).to.have.status(200);
           expect(res.body).to.be.an("object");
-          expect(res.body).to.have.keys("id", "username", "name");
+          expect(res.body).to.include.keys("id", "username", "name");
           expect(res.body.name).to.equal(updatedName);
           return User.findOne({ _id: user.id });
         })
