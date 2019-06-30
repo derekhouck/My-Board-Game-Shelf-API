@@ -1,12 +1,10 @@
-'use strict';
-
 require('dotenv').config();
 const express = require('express');
 const morgan = require('morgan');
 const passport = require('passport');
 const cors = require('cors');
 
-const { PORT, CLIENT_ORIGIN } = require('./config');
+const { PORT, CORS_WHITELIST } = require('./config');
 const { dbConnect } = require('./db-mongoose');
 const localStrategy = require('./passport/local');
 const jwtStrategy = require('./passport/jwt');
@@ -26,7 +24,13 @@ app.use(
 
 app.use(
   cors({
-    origin: CLIENT_ORIGIN
+    origin: function (origin, callback) {
+      if (CORS_WHITELIST.indexOf(origin) !== -1 || !origin) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    }
   })
 );
 
