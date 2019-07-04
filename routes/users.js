@@ -1,5 +1,3 @@
-'use strict';
-
 const express = require('express');
 const passport = require('passport');
 
@@ -139,6 +137,12 @@ router.post('/',
 
 // GET /api/users
 router.get('/', jwtAuth, (req, res, next) => {
+  if (!req.user.admin) {
+    const err = new Error('Unauthorized');
+    err.status = 401;
+    next(err);
+  }
+
   return User
     .find()
     .then(users => res.json(users))

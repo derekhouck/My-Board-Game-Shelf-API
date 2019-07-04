@@ -306,6 +306,18 @@ describe("My Board Game Shelf API - Users", function () {
         });
     });
 
+    it('should reject requests from non-admins', function () {
+      return chai
+        .request(app)
+        .get("/api/users")
+        .set("Authorization", `Bearer ${token}`)
+        .then(res => {
+          expect(res).to.have.status(401);
+          expect(res.body).to.be.an("object");
+          expect(res.body.message).to.equal("Unauthorized");
+        });
+    });
+
     it("should catch errors and respond properly", function () {
       sandbox.stub(User.schema.options.toJSON, "transform").throws("FakeError");
 
@@ -314,7 +326,7 @@ describe("My Board Game Shelf API - Users", function () {
           return chai
             .request(app)
             .get("/api/users")
-            .set("Authorization", `Bearer ${token}`);
+            .set("Authorization", `Bearer ${adminToken}`);
         })
         .then(res => {
           expect(res).to.have.status(500);
