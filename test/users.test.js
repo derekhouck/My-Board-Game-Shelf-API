@@ -19,7 +19,8 @@ const sandbox = sinon.createSandbox();
 
 describe("My Board Game Shelf API - Users", function () {
   let user = {};
-  let token;
+  let admin = {};
+  let adminToken, token;
   const username = "exampleUser";
   const password = "examplePass";
   const name = "Example User";
@@ -37,7 +38,9 @@ describe("My Board Game Shelf API - Users", function () {
       Game.insertMany(games),
       User.createIndexes()
     ]).then(([users]) => {
-      user = users[0];
+      user = users.find(user => !user.admin);
+      admin = users.find(user => user.admin);
+      adminToken = jwt.sign({ user: admin }, JWT_SECRET, { subject: admin.username });
       token = jwt.sign({ user }, JWT_SECRET, { subject: user.username });
     });
   });
@@ -290,7 +293,7 @@ describe("My Board Game Shelf API - Users", function () {
             chai
               .request(app)
               .get("/api/users")
-              .set("Authorization", `Bearer ${token}`)
+              .set("Authorization", `Bearer ${adminToken}`)
           ]);
         })
         .then(([data, res]) => {
