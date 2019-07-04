@@ -17,21 +17,21 @@ const expect = chai.expect;
 chai.use(chaiHttp);
 const sandbox = sinon.createSandbox();
 
-describe("My Board Game Shelf API - Users", function() {
+describe("My Board Game Shelf API - Users", function () {
   let user = {};
   let token;
   const username = "exampleUser";
   const password = "examplePass";
   const name = "Example User";
 
-  before(function() {
+  before(function () {
     sinon
       .stub(User, "hashPassword")
       .resolves("$2a$10$49s2s5pV.GaKdaJZ8oI0COlWmoB6Irmfb2b/xpYR.mJ3R2piklp62"); // Hash of 'examplePass'
     return dbConnect(TEST_DATABASE_URL);
   });
 
-  beforeEach(function() {
+  beforeEach(function () {
     return Promise.all([
       User.insertMany(users),
       Game.insertMany(games),
@@ -42,17 +42,17 @@ describe("My Board Game Shelf API - Users", function() {
     });
   });
 
-  afterEach(function() {
+  afterEach(function () {
     sandbox.restore();
     return dbDrop();
   });
 
-  after(function() {
+  after(function () {
     return dbDisconnect();
   });
 
-  describe("POST /api/users", function() {
-    it("should create a new user with lowercase username", function() {
+  describe("POST /api/users", function () {
+    it("should create a new user with lowercase username", function () {
       let res;
       return chai
         .request(app)
@@ -80,7 +80,7 @@ describe("My Board Game Shelf API - Users", function() {
         });
     });
 
-    it("should reject users with missing username", function() {
+    it("should reject users with missing username", function () {
       return chai
         .request(app)
         .post("/api/users")
@@ -94,7 +94,7 @@ describe("My Board Game Shelf API - Users", function() {
         });
     });
 
-    it("should reject users with missing password", function() {
+    it("should reject users with missing password", function () {
       return chai
         .request(app)
         .post("/api/users")
@@ -108,7 +108,7 @@ describe("My Board Game Shelf API - Users", function() {
         });
     });
 
-    it("should reject users with non-string username", function() {
+    it("should reject users with non-string username", function () {
       return chai
         .request(app)
         .post("/api/users")
@@ -124,7 +124,7 @@ describe("My Board Game Shelf API - Users", function() {
         });
     });
 
-    it("should reject users with non-string password", function() {
+    it("should reject users with non-string password", function () {
       return chai
         .request(app)
         .post("/api/users")
@@ -140,7 +140,7 @@ describe("My Board Game Shelf API - Users", function() {
         });
     });
 
-    it("should reject users with non-string name", function() {
+    it("should reject users with non-string name", function () {
       return chai
         .request(app)
         .post("/api/users")
@@ -156,7 +156,7 @@ describe("My Board Game Shelf API - Users", function() {
         });
     });
 
-    it("should reject users with non-trimmed username", function() {
+    it("should reject users with non-trimmed username", function () {
       return chai
         .request(app)
         .post("/api/users")
@@ -172,7 +172,7 @@ describe("My Board Game Shelf API - Users", function() {
         });
     });
 
-    it("should reject users with non-trimmed password", function() {
+    it("should reject users with non-trimmed password", function () {
       return chai
         .request(app)
         .post("/api/users")
@@ -188,7 +188,7 @@ describe("My Board Game Shelf API - Users", function() {
         });
     });
 
-    it("should reject users with empty username", function() {
+    it("should reject users with empty username", function () {
       return chai
         .request(app)
         .post("/api/users")
@@ -204,7 +204,7 @@ describe("My Board Game Shelf API - Users", function() {
         });
     });
 
-    it("should reject users with password less than 8 characters", function() {
+    it("should reject users with password less than 8 characters", function () {
       return chai
         .request(app)
         .post("/api/users")
@@ -220,7 +220,7 @@ describe("My Board Game Shelf API - Users", function() {
         });
     });
 
-    it("should reject users with password greater than 72 characters", function() {
+    it("should reject users with password greater than 72 characters", function () {
       return chai
         .request(app)
         .post("/api/users")
@@ -236,7 +236,7 @@ describe("My Board Game Shelf API - Users", function() {
         });
     });
 
-    it("should reject users with a duplicate username", function() {
+    it("should reject users with a duplicate username", function () {
       return User.create({
         username,
         password,
@@ -256,7 +256,7 @@ describe("My Board Game Shelf API - Users", function() {
         });
     });
 
-    it("should trim name", function() {
+    it("should trim name", function () {
       return chai
         .request(app)
         .post("/api/users")
@@ -275,14 +275,8 @@ describe("My Board Game Shelf API - Users", function() {
     });
   });
 
-  describe("GET /api/users", function() {
-    const user = { username, name };
-    const token = jwt.sign({ user }, JWT_SECRET, {
-      subject: username,
-      expiresIn: "1m"
-    });
-
-    it("should return an array of users", function() {
+  describe("GET /api/users", function () {
+    it("should return an array of users", function () {
       const userOne = { username, password, name };
       const userTwo = {
         username: "secondUser",
@@ -309,7 +303,7 @@ describe("My Board Game Shelf API - Users", function() {
         });
     });
 
-    it("should catch errors and respond properly", function() {
+    it("should catch errors and respond properly", function () {
       sandbox.stub(User.schema.options.toJSON, "transform").throws("FakeError");
 
       return User.create({ username, password, name })
@@ -328,8 +322,8 @@ describe("My Board Game Shelf API - Users", function() {
     });
   });
 
-  describe("PUT /api/users", function() {
-    it("should update the user when provided a valid name", function() {
+  describe("PUT /api/users", function () {
+    it("should update the user when provided a valid name", function () {
       const updateData = { name: "Updated Name" };
       return chai
         .request(app)
@@ -347,7 +341,7 @@ describe("My Board Game Shelf API - Users", function() {
         });
     });
 
-    it("should update the user when provided a valid username", function() {
+    it("should update the user when provided a valid username", function () {
       const updateData = { username: "UpdatedUsername" };
       return chai
         .request(app)
@@ -365,7 +359,7 @@ describe("My Board Game Shelf API - Users", function() {
         });
     });
 
-    it("should update the user when provided a valid password", function() {
+    it("should update the user when provided a valid password", function () {
       User.hashPassword.restore(); // Removes the earlier stub
       sandbox
         .stub(User, "hashPassword")
@@ -399,7 +393,7 @@ describe("My Board Game Shelf API - Users", function() {
         });
     });
 
-    it("should respond with status 400 and an error message when `id` is not valid", function() {
+    it("should respond with status 400 and an error message when `id` is not valid", function () {
       const updateData = {
         name: "Updated Name"
       };
@@ -414,7 +408,7 @@ describe("My Board Game Shelf API - Users", function() {
         });
     });
 
-    it("should respond with a 404 for an id that does not exist", function() {
+    it("should respond with a 404 for an id that does not exist", function () {
       // The string "DOESNOTEXIST" is 12 bytes which is a valid Mongo ObjectId
       const updateData = {
         name: "Updated Name"
@@ -429,7 +423,7 @@ describe("My Board Game Shelf API - Users", function() {
         });
     });
 
-    it("should return an error with non-string username", function() {
+    it("should return an error with non-string username", function () {
       return chai
         .request(app)
         .put(`/api/users/${user.id}`)
@@ -445,7 +439,7 @@ describe("My Board Game Shelf API - Users", function() {
         });
     });
 
-    it("should return an error with non-string name", function() {
+    it("should return an error with non-string name", function () {
       return chai
         .request(app)
         .put(`/api/users/${user.id}`)
@@ -461,7 +455,7 @@ describe("My Board Game Shelf API - Users", function() {
         });
     });
 
-    it("should return an error with non-string password", function() {
+    it("should return an error with non-string password", function () {
       return chai
         .request(app)
         .put(`/api/users/${user.id}`)
@@ -477,7 +471,7 @@ describe("My Board Game Shelf API - Users", function() {
         });
     });
 
-    it("should return an error with non-trimmed username", function() {
+    it("should return an error with non-trimmed username", function () {
       return chai
         .request(app)
         .put(`/api/users/${user.id}`)
@@ -493,7 +487,7 @@ describe("My Board Game Shelf API - Users", function() {
         });
     });
 
-    it("should return an error with non-trimmed password", function() {
+    it("should return an error with non-trimmed password", function () {
       return chai
         .request(app)
         .put(`/api/users/${user.id}`)
@@ -509,7 +503,7 @@ describe("My Board Game Shelf API - Users", function() {
         });
     });
 
-    it('should return an error when "username" is an empty string', function() {
+    it('should return an error when "username" is an empty string', function () {
       return chai
         .request(app)
         .put(`/api/users/${user.id}`)
@@ -525,7 +519,7 @@ describe("My Board Game Shelf API - Users", function() {
         });
     });
 
-    it("should return an error when password is less than 8 characters", function() {
+    it("should return an error when password is less than 8 characters", function () {
       return chai
         .request(app)
         .put(`/api/users/${user.id}`)
@@ -541,7 +535,7 @@ describe("My Board Game Shelf API - Users", function() {
         });
     });
 
-    it("should return an error when password is greater than 72 characters", function() {
+    it("should return an error when password is greater than 72 characters", function () {
       return chai
         .request(app)
         .put(`/api/users/${user.id}`)
@@ -557,7 +551,7 @@ describe("My Board Game Shelf API - Users", function() {
         });
     });
 
-    it("should return an error when username is already taken", function() {
+    it("should return an error when username is already taken", function () {
       return User.find()
         .then(users => {
           const user2 = users.filter(_user => _user.id !== user.id)[0];
@@ -574,7 +568,7 @@ describe("My Board Game Shelf API - Users", function() {
         });
     });
 
-    it("should trim name", function() {
+    it("should trim name", function () {
       const updatedName = "Updated Name";
       return chai
         .request(app)
@@ -593,7 +587,7 @@ describe("My Board Game Shelf API - Users", function() {
         });
     });
 
-    it("should catch errors and respond properly", function() {
+    it("should catch errors and respond properly", function () {
       sandbox.stub(User.schema.options.toJSON, "transform").throws("FakeError");
 
       const updateData = {
@@ -613,8 +607,8 @@ describe("My Board Game Shelf API - Users", function() {
     });
   });
 
-  describe("DELETE /api/users", function() {
-    it("should delete the logged in user and respond with 204", function() {
+  describe("DELETE /api/users", function () {
+    it("should delete the logged in user and respond with 204", function () {
       return chai
         .request(app)
         .delete(`/api/users/${user.id}`)
@@ -628,7 +622,7 @@ describe("My Board Game Shelf API - Users", function() {
         });
     });
 
-    it("should delete an existing user and remove all of their games", function() {
+    it("should delete an existing user and remove all of their games", function () {
       let allGames;
       return Promise.all([Game.find(), Game.find({ userId: user.id })])
         .then(([_allGames, userGames]) => {
@@ -662,7 +656,7 @@ describe("My Board Game Shelf API - Users", function() {
         });
     });
 
-    it("should respond with a 400 for an invalid id", function() {
+    it("should respond with a 400 for an invalid id", function () {
       return chai
         .request(app)
         .delete("/api/users/NOT-A-VALID-ID")
@@ -673,7 +667,7 @@ describe("My Board Game Shelf API - Users", function() {
         });
     });
 
-    it("should respond with a 400 when given a different user id", function() {
+    it("should respond with a 400 when given a different user id", function () {
       let user2 = {};
       let user2Games;
       return User.find()
@@ -717,7 +711,7 @@ describe("My Board Game Shelf API - Users", function() {
         });
     });
 
-    it("should catch errors and respond properly", function() {
+    it("should catch errors and respond properly", function () {
       sandbox.stub(express.response, "sendStatus").throws("FakeError");
       return chai
         .request(app)
