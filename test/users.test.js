@@ -602,6 +602,24 @@ describe("My Board Game Shelf API - Users", function () {
         });
     });
 
+    it('should allow an admin to create another admin', function () {
+      const updateData = { admin: true };
+      return chai
+        .request(app)
+        .put(`/api/users/${user.id}`)
+        .set("Autorization", `Bearer ${adminToken}`)
+        .send(updateData)
+        .then(res => {
+          expect(res).to.have.status(200);
+          expect(res.body).to.be.an("object");
+          expect(res.body).to.include.keys("id", "admin");
+          expect(res.body.id).to.equal(user.id);
+          expect(res.body.admin).to.equal(true);
+        });
+    });
+
+    it('should prevent non-admins from creating admins');
+
     it("should catch errors and respond properly", function () {
       sandbox.stub(User.schema.options.toJSON, "transform").throws("FakeError");
 
