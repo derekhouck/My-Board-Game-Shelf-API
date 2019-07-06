@@ -343,7 +343,7 @@ describe("My Board Game Shelf API - Users", function () {
       return chai
         .request(app)
         .put(`/api/users/${user.id}`)
-        .set("Authorizaton", `Bearer ${token}`)
+        .set("Authorization", `Bearer ${token}`)
         .send(updateData)
         .then(res => {
           expect(res).to.have.status(200);
@@ -361,7 +361,7 @@ describe("My Board Game Shelf API - Users", function () {
       return chai
         .request(app)
         .put(`/api/users/${user.id}`)
-        .set("Authorizaton", `Bearer ${token}`)
+        .set("Authorization", `Bearer ${token}`)
         .send(updateData)
         .then(res => {
           expect(res).to.have.status(200);
@@ -385,7 +385,7 @@ describe("My Board Game Shelf API - Users", function () {
       return chai
         .request(app)
         .put(`/api/users/${user.id}`)
-        .set("Authorizaton", `Bearer ${token}`)
+        .set("Authorization", `Bearer ${token}`)
         .send(updateData)
         .then(res => {
           expect(res).to.have.status(200);
@@ -442,6 +442,7 @@ describe("My Board Game Shelf API - Users", function () {
       return chai
         .request(app)
         .put(`/api/users/${user.id}`)
+        .set("Authorization", `Bearer ${token}`)
         .send({ username: 1234 })
 
         .then(res => {
@@ -458,6 +459,7 @@ describe("My Board Game Shelf API - Users", function () {
       return chai
         .request(app)
         .put(`/api/users/${user.id}`)
+        .set("Authorization", `Bearer ${token}`)
         .send({ name: 1234 })
 
         .then(res => {
@@ -474,6 +476,7 @@ describe("My Board Game Shelf API - Users", function () {
       return chai
         .request(app)
         .put(`/api/users/${user.id}`)
+        .set("Authorization", `Bearer ${token}`)
         .send({ password: 1234 })
 
         .then(res => {
@@ -490,6 +493,7 @@ describe("My Board Game Shelf API - Users", function () {
       return chai
         .request(app)
         .put(`/api/users/${user.id}`)
+        .set("Authorization", `Bearer ${token}`)
         .send({ username: " UpdatedUsername " })
 
         .then(res => {
@@ -506,6 +510,7 @@ describe("My Board Game Shelf API - Users", function () {
       return chai
         .request(app)
         .put(`/api/users/${user.id}`)
+        .set("Authorization", `Bearer ${token}`)
         .send({ password: " updatedpassword " })
 
         .then(res => {
@@ -522,6 +527,7 @@ describe("My Board Game Shelf API - Users", function () {
       return chai
         .request(app)
         .put(`/api/users/${user.id}`)
+        .set("Authorization", `Bearer ${token}`)
         .send({ username: "" })
 
         .then(res => {
@@ -538,6 +544,7 @@ describe("My Board Game Shelf API - Users", function () {
       return chai
         .request(app)
         .put(`/api/users/${user.id}`)
+        .set("Authorization", `Bearer ${token}`)
         .send({ password: "1234567" })
 
         .then(res => {
@@ -554,6 +561,7 @@ describe("My Board Game Shelf API - Users", function () {
       return chai
         .request(app)
         .put(`/api/users/${user.id}`)
+        .set("Authorization", `Bearer ${token}`)
         .send({ password: "a".repeat(73) })
 
         .then(res => {
@@ -573,6 +581,7 @@ describe("My Board Game Shelf API - Users", function () {
           return chai
             .request(app)
             .put(`/api/users/${user.id}`)
+            .set("Authorization", `Bearer ${token}`)
             .send({ username: user2.username });
         })
         .then(res => {
@@ -588,6 +597,7 @@ describe("My Board Game Shelf API - Users", function () {
       return chai
         .request(app)
         .put(`/api/users/${user.id}`)
+        .set("Authorization", `Bearer ${token}`)
         .send({ name: ` ${updatedName} ` })
         .then(res => {
           expect(res).to.have.status(200);
@@ -607,7 +617,7 @@ describe("My Board Game Shelf API - Users", function () {
       return chai
         .request(app)
         .put(`/api/users/${user.id}`)
-        .set("Autorization", `Bearer ${adminToken}`)
+        .set("Authorization", `Bearer ${adminToken}`)
         .send(updateData)
         .then(res => {
           expect(res).to.have.status(200);
@@ -618,7 +628,19 @@ describe("My Board Game Shelf API - Users", function () {
         });
     });
 
-    it('should prevent non-admins from creating admins');
+    it('should prevent non-admins from creating admins', function () {
+      const updateData = { admin: true };
+      return chai
+        .request(app)
+        .put(`/api/users/${user.id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .send(updateData)
+        .then(res => {
+          expect(res).to.have.status(401);
+          expect(res.body).to.be.an("object");
+          expect(res.body.message).to.equal("Unauthorized");
+        });
+    });
 
     it("should catch errors and respond properly", function () {
       sandbox.stub(User.schema.options.toJSON, "transform").throws("FakeError");

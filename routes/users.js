@@ -10,6 +10,19 @@ const router = express.Router();
 
 const jwtAuth = passport.authenticate('jwt', { session: false, failWithError: true });
 
+const createDigest = (req, res, next) => {
+  const { password } = req.body;
+  if (password) {
+    User.hashPassword(password)
+      .then(digest => {
+        req.body.digest = digest;
+        return next();
+      });
+  } else {
+    return next();
+  }
+};
+
 const validateStringFields = (req, res, next) => {
   const stringFields = ['username', 'password', 'name'];
   const nonStringField = stringFields.find(
@@ -81,16 +94,11 @@ const validateFieldSizes = (req, res, next) => {
   }
 };
 
-const createDigest = (req, res, next) => {
-  const { password } = req.body;
-  if (password) {
-    User.hashPassword(password)
-      .then(digest => {
-        req.body.digest = digest;
-        return next();
-      });
-  } else {
-    return next();
+const requiresAdmin = (req, res, next) => {
+  if (!req.user.admin) {
+    const err = new Error('Unauthorized');
+    err.status = 401;
+    next(err);
   }
 };
 
@@ -137,11 +145,7 @@ router.post('/',
 
 // GET /api/users
 router.get('/', jwtAuth, (req, res, next) => {
-  if (!req.user.admin) {
-    const err = new Error('Unauthorized');
-    err.status = 401;
-    next(err);
-  }
+  requiresAdmin(req, res, next);
 
   return User
     .find()
@@ -151,6 +155,7 @@ router.get('/', jwtAuth, (req, res, next) => {
 
 // PUT /api/users/:id
 router.put('/:id',
+  jwtAuth,
   isValidId,
   validateStringFields,
   validateTrimmedFields,
@@ -164,12 +169,16 @@ router.put('/:id',
 
     updateableFields.forEach(field => {
       if (field in req.body) {
-        if (field === 'digest') {
-          return toUpdate['password'] = req.body[field];
-        } else if (field === 'name') {
-          return toUpdate[field] = req.body[field].trim();
-        } else {
-          return toUpdate[field] = req.body[field];
+        switch (field) {
+          case 'admin':
+            requiresAdmin(req, res, next);
+            return toUpdate[field] = req.body[field];
+          case 'digest':
+            return toUpdate['password'] = req.body[field];
+          case 'name':
+            return toUpdate[field] = req.body[field].trim();
+          default:
+            return toUpdate[field] = req.body[field];
         }
       }
     });
