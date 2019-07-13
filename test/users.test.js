@@ -10,8 +10,9 @@ const { dbConnect, dbDisconnect, dbDrop } = require("../db-mongoose");
 
 const User = require("../models/user");
 const Game = require("../models/game");
+const Tag = require('../models/tag');
 
-const { users, games } = require("../db/data");
+const { users, games, tags } = require("../db/data");
 
 const expect = chai.expect;
 chai.use(chaiHttp);
@@ -36,6 +37,7 @@ describe("My Board Game Shelf API - Users", function () {
     return Promise.all([
       User.insertMany(users),
       Game.insertMany(games),
+      Tag.insertMany(tags),
       User.createIndexes()
     ]).then(([users]) => {
       user = users.find(user => !user.admin);
@@ -333,6 +335,164 @@ describe("My Board Game Shelf API - Users", function () {
           expect(res).to.be.json;
           expect(res.body).to.be.a("object");
           expect(res.body.message).to.equal("Internal Server Error");
+        });
+    });
+  });
+
+  describe("GET /api/users/:id/games", function () {
+    it('should return the correct number of Games', function () {
+      return Promise.all([
+        Game.find({ userId: user.id }),
+        chai.request(app)
+          .get(`/api/users/${user.id}/games`)
+          .set('Authorization', `Bearer ${token}`)
+      ])
+        .then(([data, res]) => {
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('array');
+          expect(res.body).to.have.length(data.length);
+        });
+    });
+    it('should return a list sorted asc with the correct fields', function () {
+      return Promise.all([
+        Game.find({ userId: user.id }).sort({ title: 'asc' }),
+        chai.request(app)
+          .get(`/api/users/${user.id}/games`)
+          .set('Authorization', `Bearer ${token}`)
+      ])
+        .then(([data, res]) => {
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('array');
+          expect(res.body).to.have.length(data.length);
+          res.body.forEach(function (item, i) {
+            expect(item).to.be.a('object');
+            // Note: folderId, tags and content are optional
+            expect(item).to.include.all.keys('id', 'title', 'createdAt', 'updatedAt', 'userId');
+            expect(item.id).to.equal(data[i].id);
+            expect(item.title).to.equal(data[i].title);
+            expect(item.userId).to.equal(data[i].userId.toString());
+            expect(new Date(item.createdAt)).to.eql(data[i].createdAt);
+            expect(new Date(item.updatedAt)).to.eql(data[i].updatedAt);
+          });
+        });
+    });
+    it('should return correct search results for a searchTerm query', function () {
+      const searchTerm = 'king';
+
+      const re = new RegExp(searchTerm, 'i');
+      const dbPromise = Game
+        .find({
+          userId: user.id,
+          title: re
+        })
+        .sort({ title: 'asc' });
+
+      const apiPromise = chai.request(app)
+        .get(`/api/users/${user.id}/games?searchTerm=${searchTerm}`)
+        .set('Authorization', `Bearer ${token}`);
+
+      return Promise.all([dbPromise, apiPromise])
+        .then(([data, res]) => {
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('array');
+          expect(res.body).to.have.length(data.length);
+          res.body.forEach(function (item, i) {
+            expect(item).to.be.a('object');
+            expect(item).to.include.all.keys('id', 'title', 'createdAt', 'updatedAt');
+            expect(item.id).to.equal(data[i].id);
+            expect(item.title).to.equal(data[i].title);
+            expect(new Date(item.createdAt)).to.eql(data[i].createdAt);
+            expect(new Date(item.updatedAt)).to.eql(data[i].updatedAt);
+          });
+        });
+    });
+    it('should return correct search results for a number of players query', function () {
+      const players = 7;
+
+      const dbPromise = Game
+        .find({
+          userId: user.id,
+          'players.min': { $lte: players },
+          'players.max': { $gte: players }
+        })
+        .sort({ title: 'asc' });
+
+      const apiPromise = chai.request(app)
+        .get(`/api/users/${user.id}/games?players=${players}`)
+        .set('Authorization', `Bearer ${token}`);
+
+      return Promise.all([dbPromise, apiPromise])
+        .then(([data, res]) => {
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('array');
+          expect(res.body).to.have.length(data.length);
+          res.body.forEach(function (item, i) {
+            expect(item).to.be.a('object');
+            expect(item).to.include.all.keys('id', 'title', 'createdAt', 'updatedAt', 'players');
+            expect(item.id).to.equal(data[i].id);
+            expect(item.title).to.equal(data[i].title);
+            expect(item.players.min).to.equal(data[i].players.min);
+            expect(item.players.max).to.equal(data[i].players.max);
+            expect(new Date(item.createdAt)).to.eql(data[i].createdAt);
+            expect(new Date(item.updatedAt)).to.eql(data[i].updatedAt);
+          });
+        });
+    });
+    it('should return correct search results for a tagId query', function () {
+      return Tag.findOne()
+        .then(data => {
+          return Promise.all([
+            Game.find({ tags: data.id }),
+            chai.request(app)
+              .get(`/api/users/${user.id}/games?tagId=${data.id}`)
+              .set('Authorization', `Bearer ${token}`)
+          ]);
+        })
+        .then(([data, res]) => {
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('array');
+          expect(res.body).to.have.length(data.length);
+        });
+    });
+    it('should return an empty array for an incorrect query', function () {
+      const searchTerm = 'NOT-A-VALID-QUERY';
+
+      const re = new RegExp(searchTerm, 'i');
+      const dbPromise = Game
+        .find({
+          userId: user.id,
+          title: re
+        })
+        .sort({ title: 'asc' });
+
+      const apiPromise = chai.request(app)
+        .get(`/api/users/${user.id}/games?searchTerm=${searchTerm}`)
+        .set('Authorization', `Bearer ${token}`);
+
+      return Promise.all([dbPromise, apiPromise])
+        .then(([data, res]) => {
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('array');
+          expect(res.body).to.have.length(data.length);
+        });
+    });
+    it('should catch errors and respond properly', function () {
+      sandbox.stub(Game.schema.options.toJSON, 'transform').throws('FakeError');
+
+      return chai.request(app)
+        .get(`/api/users/${user.id}/games`)
+        .set('Authorization', `Bearer ${token}`)
+        .then(res => {
+          expect(res).to.have.status(500);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('Internal Server Error');
         });
     });
   });

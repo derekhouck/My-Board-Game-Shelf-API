@@ -153,6 +153,33 @@ router.get('/', jwtAuth, (req, res, next) => {
     .catch(err => next(err));
 });
 
+router.get('/:id/games', jwtAuth, (req, res, next) => {
+  const { searchTerm, players, tagId } = req.query;
+  const userId = req.user.id;
+
+  let filter = { userId };
+
+  if (searchTerm) {
+    const re = new RegExp(searchTerm, 'i');
+    filter.title = re;
+  }
+
+  if (players) {
+    filter['players.min'] = { $lte: players };
+    filter['players.max'] = { $gte: players };
+  }
+
+  if (tagId) {
+    filter.tags = tagId;
+  }
+
+  Game.find(filter)
+    .populate('tags')
+    .sort({ title: 'asc' })
+    .then(results => res.json(results))
+    .catch(err => next(err));
+});
+
 // PUT /api/users/:id
 router.put('/:id',
   jwtAuth,
