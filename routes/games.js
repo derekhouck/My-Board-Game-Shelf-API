@@ -1,12 +1,14 @@
-'use strict';
-
 const express = require('express');
 const mongoose = require('mongoose');
+const passport = require('passport');
 
 const Game = require('../models/game');
 const Tag = require('../models/tag');
 
 const { isValidId } = require('./validators');
+
+const jwtAuth = passport.authenticate('jwt', { session: false, failWithError: true });
+const router = express.Router();
 
 const validatePlayers = (req, res, next) => {
   const { minPlayers, maxPlayers } = req.body;
@@ -72,14 +74,12 @@ const validateTagIds = (tags, userId) => {
     });
 };
 
-const router = express.Router();
 
 // GET /api/games
 router.get('/', (req, res, next) => {
   const { searchTerm, players, tagId } = req.query;
-  const userId = req.user.id;
 
-  let filter = { userId };
+  let filter = {};
 
   if (searchTerm) {
     const re = new RegExp(searchTerm, 'i');
@@ -103,7 +103,7 @@ router.get('/', (req, res, next) => {
 });
 
 // GET /api/games/:id
-router.get('/:id', isValidId, (req, res, next) => {
+router.get('/:id', jwtAuth, isValidId, (req, res, next) => {
   const { id } = req.params;
   const userId = req.user.id;
 
@@ -120,7 +120,7 @@ router.get('/:id', isValidId, (req, res, next) => {
 });
 
 // POST /api/games
-router.post('/', validatePlayers, (req, res, next) => {
+router.post('/', jwtAuth, validatePlayers, (req, res, next) => {
   const { title, minPlayers, maxPlayers, tags } = req.body;
   const userId = req.user.id;
 
@@ -150,6 +150,7 @@ router.post('/', validatePlayers, (req, res, next) => {
 
 // PUT /api/games/:id
 router.put('/:id',
+  jwtAuth,
   isValidId,
   validatePlayers,
   (req, res, next) => {
@@ -191,7 +192,7 @@ router.put('/:id',
   });
 
 // DELETE /api/games/:id
-router.delete('/:id', isValidId, (req, res, next) => {
+router.delete('/:id', jwtAuth, isValidId, (req, res, next) => {
   const { id } = req.params;
 
   Game.findOneAndDelete({ _id: id })

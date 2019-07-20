@@ -48,10 +48,9 @@ describe('My Board Game Shelf API - Games', function () {
   describe('GET /api/games', function () {
     it('should return the correct number of Games', function () {
       return Promise.all([
-        Game.find({ userId: user.id }),
+        Game.find(),
         chai.request(app)
           .get('/api/games')
-          .set('Authorization', `Bearer ${token}`)
       ])
         .then(([data, res]) => {
           expect(res).to.have.status(200);
@@ -63,10 +62,9 @@ describe('My Board Game Shelf API - Games', function () {
 
     it('should return a list sorted asc with the correct fields', function () {
       return Promise.all([
-        Game.find({ userId: user.id }).sort({ title: 'asc' }),
+        Game.find().sort({ title: 'asc' }),
         chai.request(app)
           .get('/api/games')
-          .set('Authorization', `Bearer ${token}`)
       ])
         .then(([data, res]) => {
           expect(res).to.have.status(200);
@@ -92,14 +90,12 @@ describe('My Board Game Shelf API - Games', function () {
       const re = new RegExp(searchTerm, 'i');
       const dbPromise = Game
         .find({
-          userId: user.id,
           title: re
         })
         .sort({ title: 'asc' });
 
       const apiPromise = chai.request(app)
         .get(`/api/games?searchTerm=${searchTerm}`)
-        .set('Authorization', `Bearer ${token}`);
 
       return Promise.all([dbPromise, apiPromise])
         .then(([data, res]) => {
@@ -123,7 +119,6 @@ describe('My Board Game Shelf API - Games', function () {
 
       const dbPromise = Game
         .find({
-          userId: user.id,
           'players.min': { $lte: players },
           'players.max': { $gte: players }
         })
@@ -131,7 +126,6 @@ describe('My Board Game Shelf API - Games', function () {
 
       const apiPromise = chai.request(app)
         .get(`/api/games?players=${players}`)
-        .set('Authorization', `Bearer ${token}`);
 
       return Promise.all([dbPromise, apiPromise])
         .then(([data, res]) => {
@@ -152,24 +146,22 @@ describe('My Board Game Shelf API - Games', function () {
         });
     });
 
-    // TODO: Update test once /api/games gets updated
-    // it('should return correct search results for a tagId query', function () {
-    //   return Tag.findOne()
-    //     .then(data => {
-    //       return Promise.all([
-    //         Game.find({ tags: data.id }),
-    //         chai.request(app)
-    //           .get(`/api/games?tagId=${data.id}`)
-    //           .set('Authorization', `Bearer ${token}`)
-    //       ]);
-    //     })
-    //     .then(([data, res]) => {
-    //       expect(res).to.have.status(200);
-    //       expect(res).to.be.json;
-    //       expect(res.body).to.be.a('array');
-    //       expect(res.body).to.have.length(data.length);
-    //     });
-    // });
+    it('should return correct search results for a tagId query', function () {
+      return Tag.findOne()
+        .then(data => {
+          return Promise.all([
+            Game.find({ tags: data.id }),
+            chai.request(app)
+              .get(`/api/games?tagId=${data.id}`)
+          ]);
+        })
+        .then(([data, res]) => {
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('array');
+          expect(res.body).to.have.length(data.length);
+        });
+    });
 
     it('should return an empty array for an incorrect query', function () {
       const searchTerm = 'NOT-A-VALID-QUERY';
@@ -184,7 +176,6 @@ describe('My Board Game Shelf API - Games', function () {
 
       const apiPromise = chai.request(app)
         .get(`/api/games?searchTerm=${searchTerm}`)
-        .set('Authorization', `Bearer ${token}`);
 
       return Promise.all([dbPromise, apiPromise])
         .then(([data, res]) => {
@@ -200,7 +191,6 @@ describe('My Board Game Shelf API - Games', function () {
 
       return chai.request(app)
         .get('/api/games')
-        .set('Authorization', `Bearer ${token}`)
         .then(res => {
           expect(res).to.have.status(500);
           expect(res).to.be.json;
