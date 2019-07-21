@@ -67,7 +67,15 @@ describe("My Board Game Shelf API - Users", function () {
           res = _res;
           expect(res).to.have.status(201);
           expect(res.body).to.be.an("object");
-          expect(res.body).to.have.keys("id", "username", "name", "admin");
+          expect(res.body).to.have.keys(
+            "admin",
+            "createdAt",
+            "id",
+            "games",
+            "updatedAt",
+            "username",
+            "name"
+          );
           expect(res.body.id).to.exist;
           expect(res.body.username).to.equal(username.toLowerCase());
           expect(res.body.name).to.equal(name);
@@ -303,7 +311,15 @@ describe("My Board Game Shelf API - Users", function () {
           expect(res.body).to.be.an("array");
           expect(res.body).to.have.length(data.length);
           res.body.forEach(user => {
-            expect(user).to.have.keys("id", "username", "name", "admin");
+            expect(user).to.have.keys(
+              "admin",
+              "createdAt",
+              "games",
+              "id",
+              "updatedAt",
+              "username",
+              "name"
+            );
           });
         });
     });
@@ -334,6 +350,70 @@ describe("My Board Game Shelf API - Users", function () {
           expect(res).to.have.status(500);
           expect(res).to.be.json;
           expect(res.body).to.be.a("object");
+          expect(res.body.message).to.equal("Internal Server Error");
+        });
+    });
+  });
+
+  describe('GET /api/users/:id', function () {
+    it('should return the correct user', () => {
+      let data;
+      return User.findOne()
+        .then(_data => {
+          data = _data;
+          return chai.request(app).get(`/api/users/${data.id}`);
+        })
+        .then(res => {
+          expect(res).to.have.status(200);
+          expect(res.body).to.be.an('object');
+          expect(res.body).to.include.all.keys(
+            'admin',
+            'createdAt',
+            'id',
+            'games',
+            'name',
+            'updatedAt',
+            'username'
+          );
+          expect(res.body.id).to.equal(data.id);
+          expect(res.body.name).to.equal(data.name);
+          expect(new Date(res.body.createdAt)).to.eql(data.createdAt);
+          expect(new Date(res.body.updatedAt)).to.eql(data.updatedAt);
+          expect(res.body.admin).to.equal(data.admin);
+          expect(res.body.username).to.equal(data.username);
+          expect(res.body.games).to.be.an('array');
+          expect(res.body.games.length).to.equal(data.games.length);
+          expect(res.body.games[0]).to.equal(data.games[0]);
+        });
+    });
+    it('should respond with status 400 and an error message when id is not valid', function () {
+      return chai
+        .request(app)
+        .get("/api/users/NOT-A-VALID-ID")
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res.body.message).to.equal("The `id` is not valid");
+        });
+    });
+    it('should respond with status 404 for an id that does not exist', function () {
+      return chai
+        .request(app)
+        .get("/api/users/DOESNOTEXIST")
+        .then(res => {
+          expect(res).to.have.status(404);
+        });
+    });
+    it('should catch errors and respond properly', function () {
+      sandbox.stub(User.schema.options.toJSON, "transform").throws("FakeError");
+      return User.findOne()
+        .then(data => {
+          return chai
+            .request(app)
+            .get(`/api/users/${data.id}`);
+        })
+        .then(res => {
+          expect(res).to.have.status(500);
+          expect(res.body).to.be.an('object');
           expect(res.body.message).to.equal("Internal Server Error");
         });
     });

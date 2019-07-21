@@ -153,6 +153,15 @@ router.get('/', jwtAuth, (req, res, next) => {
     .catch(err => next(err));
 });
 
+router.get('/:id', isValidId, (req, res, next) => {
+  const { id } = req.params;
+
+  return User
+    .findOne({ _id: id })
+    .then(user => user ? res.json(user) : next())
+    .catch(err => next(err));
+});
+
 router.get('/:id/games', jwtAuth, (req, res, next) => {
   const { searchTerm, players, tagId } = req.query;
   const userId = req.user.id;
