@@ -5,7 +5,7 @@ const passport = require('passport');
 const Game = require('../models/game');
 const Tag = require('../models/tag');
 
-const { isValidId } = require('./validators');
+const { isValidId, requiredFields } = require('./validators');
 
 const jwtAuth = passport.authenticate('jwt', { session: false, failWithError: true });
 const router = express.Router();
@@ -120,33 +120,31 @@ router.get('/:id', jwtAuth, isValidId, (req, res, next) => {
 });
 
 // POST /api/games
-router.post('/', jwtAuth, validatePlayers, (req, res, next) => {
-  const { title, minPlayers, maxPlayers, tags } = req.body;
-  const userId = req.user.id;
+router.post('/',
+  jwtAuth,
+  validatePlayers,
+  requiredFields('title'),
+  (req, res, next) => {
+    const { title, minPlayers, maxPlayers, tags } = req.body;
+    const userId = req.user.id;
 
-  if (!title) {
-    const err = new Error('Missing `title` in request body');
-    err.status = 400;
-    return next(err);
-  }
+    const newGame = {
+      title,
+      players: {
+        min: minPlayers,
+        max: maxPlayers
+      },
+      tags,
+      userId
+    };
 
-  const newGame = {
-    title,
-    players: {
-      min: minPlayers,
-      max: maxPlayers
-    },
-    tags,
-    userId
-  };
-
-  validateTagIds(newGame.tags, userId)
-    .then(() => Game.create(newGame))
-    .then(result => {
-      res.location(`${req.originalUrl}/${result.id}`).status(201).json(result);
-    })
-    .catch(err => next(err));
-});
+    validateTagIds(newGame.tags, userId)
+      .then(() => Game.create(newGame))
+      .then(result => {
+        res.location(`${req.originalUrl}/${result.id}`).status(201).json(result);
+      })
+      .catch(err => next(err));
+  });
 
 // PUT /api/games/:id
 router.put('/:id',

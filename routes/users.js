@@ -4,7 +4,7 @@ const passport = require('passport');
 const User = require('../models/user');
 const Game = require('../models/game');
 
-const { isValidId } = require('./validators');
+const { isFieldValidId, isValidId, requiredFields } = require('./validators');
 
 const router = express.Router();
 
@@ -141,6 +141,29 @@ router.post('/',
         }
         next(err);
       });
+  });
+
+router.post('/:id/games',
+  jwtAuth,
+  requiredFields('gameId'),
+  isFieldValidId('gameId'),
+  (req, res, next) => {
+    const { gameId } = req.body;
+    const userId = req.user.id;
+
+    return Game.findById(gameId)
+      .then(game => {
+        if (game) {
+          return User.findByIdAndUpdate(userId, {
+            $push: { "games": gameId }
+          }, { new: true })
+        } else {
+          return next();
+        }
+      })
+      .then(user => Game.find({ _id: { $in: user.games } }))
+      .then(games => res.json(games))
+      .catch(err => next(err));
   });
 
 // GET /api/users
