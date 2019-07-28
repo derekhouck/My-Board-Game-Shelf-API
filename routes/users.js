@@ -275,4 +275,21 @@ router.delete('/:id', jwtAuth, isValidId, (req, res, next) => {
     .catch(err => next(err));
 });
 
+router.delete('/:id/games',
+  jwtAuth,
+  requiredFields('gameId'),
+  isFieldValidId('gameId'),
+  (req, res, next) => {
+    const { gameId } = req.body;
+    const userId = req.user.id;
+    return User.findByIdAndUpdate(userId, {
+      $pull: { "games": gameId }
+    }, { new: true })
+      .then(user => {
+        return Game.find({ _id: { $in: user.games } })
+      })
+      .then(games => res.json(games))
+      .catch(err => next(err));
+  });
+
 module.exports = router;

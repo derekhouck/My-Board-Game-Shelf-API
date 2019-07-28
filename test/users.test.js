@@ -503,6 +503,74 @@ describe("My Board Game Shelf API - Users", function () {
     });
   });
 
+  describe("DELETE /api/users/:id/games", function () {
+    it('should delete an existing game and respond with remaining games', function () {
+      const gameId = user.games[0]
+      const reqBody = { gameId: gameId };
+
+      return chai.request(app)
+        .delete(`/api/users/${user.id}/games`)
+        .set('Authorization', `Bearer ${token}`)
+        .send(reqBody)
+        .then(res => {
+          expect(res).to.have.status(200);
+          expect(res.body).to.be.an('array');
+          expect(res.body.length).to.equal(user.games.length - 1);
+        });
+    });
+
+    it('should return an error when missing gameId field', function () {
+      const reqBody = {};
+
+      return chai.request(app)
+        .delete(`/api/users/${user.id}/games`)
+        .set('Authorization', `Bearer ${token}`)
+        .send(reqBody)
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('Missing gameId in request body');
+        });
+    });
+
+    it('should respond with a 400 for an invalid gameId', function () {
+      const reqBody = {
+        gameId: 'NOT-A-VALID-ID'
+      };
+
+      return chai.request(app)
+        .delete(`/api/users/${user.id}/games`)
+        .set('Authorization', `Bearer ${token}`)
+        .send(reqBody)
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('The `id` is not valid');
+        });
+    });
+
+    it('should catch errors and respond properly', function () {
+      sandbox.stub(Game.schema.options.toJSON, 'transform').throws('FakeError');
+      return Game.findOne()
+        .then(game => {
+          const reqBody = { gameId: game.id };
+
+          return chai.request(app)
+            .delete(`/api/users/${user.id}/games`)
+            .set('Authorization', `Bearer ${token}`)
+            .send(reqBody);
+        })
+        .then(res => {
+          expect(res).to.have.status(500);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('Internal Server Error');
+        });
+    });
+  });
+
   describe("GET /api/users/:id/games", function () {
     it('should return the correct number of Games', function () {
       return Promise.all([
