@@ -188,6 +188,7 @@ router.get('/:id', isValidId, (req, res, next) => {
 router.get('/:id/games', jwtAuth, (req, res, next) => {
   const { searchTerm, players, tagId } = req.query;
   const userId = req.user.id;
+  let gameGames;
 
   let filter = { userId };
 
@@ -205,10 +206,26 @@ router.get('/:id/games', jwtAuth, (req, res, next) => {
     filter.tags = tagId;
   }
 
-  Game.find(filter)
-    .populate('tags')
-    .sort({ title: 'asc' })
-    .then(results => res.json(results))
+  Promise.all([
+    Game.find(filter)
+      .populate('tags')
+      .sort({ title: 'asc' }),
+    User.findById(userId)
+  ])
+    .then(([_gameGames, user]) => {
+      gameGames = [..._gameGames];
+
+      filter['_id'] = { $in: user.games };
+      delete filter.userId;
+      return Game.find(filter);
+    })
+    .then(userGames => {
+      const combinedGames = [...gameGames, ...userGames];
+      const uniqueGames = Array
+        .from(new Set(combinedGames.map(game => game.id)))
+        .map(gameId => combinedGames.find(game => game.id === gameId));
+      return res.json(uniqueGames);
+    })
     .catch(err => next(err));
 });
 

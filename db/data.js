@@ -11,7 +11,7 @@ const users = [
   },
   {
     _id: "000000000000000000000002",
-    games: ['111111111111111111111108', '111111111111111111111107'],
+    games: ["111111111111111111111108", "111111111111111111111107", "111111111111111111111103"],
     name: "Bob User",
     password: "$2a$10$vXjjefbggXMi5S9130.Zu.AMcQoh2TqikDOmKn/7B6hpW6l8gX56W", // "baseball"
     username: "bobuser",
