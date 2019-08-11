@@ -421,46 +421,35 @@ describe("My Board Game Shelf API - Users", function () {
 
   describe("GET /api/users/:id/games", function () {
     it('should return the correct number of Games', function () {
-      return Promise.all([
-        Game.find({ userId: user.id }),
-        chai.request(app)
-          .get(`/api/users/${user.id}/games`)
-          .set('Authorization', `Bearer ${token}`)
-      ])
-        .then(([data, res]) => {
+      return chai.request(app)
+        .get(`/api/users/${user.id}/games`)
+        .set('Authorization', `Bearer ${token}`)
+        .then(res => {
           expect(user.games.length).to.not.equal(0);
-          expect(data.length).to.not.equal(0);
-          const combinedGamesList = [...data.map(game => game.id.toString()), ...user.games.map(game => game.toString())];
-          const finalGameList = Array.from(new Set(combinedGamesList));
-          expect(finalGameList).to.have.length(data.length + user.games.length - 1); // there should be one duplicate in the seed data
           expect(res).to.have.status(200);
           expect(res).to.be.json;
           expect(res.body).to.be.a('array');
-          expect(res.body).to.have.length(finalGameList.length);
+          expect(res.body).to.have.length(user.games.length);
         });
     });
     it('should return a list sorted asc with the correct fields', function () {
-      // TODO: Some tests disabled until the transition to User.games is complete
       return Promise.all([
-        Game.find({ userId: user.id }).sort({ title: 'asc' }),
+        Game.find({ '_id': { $in: user.games } }).sort({ title: 'asc' }),
         chai.request(app)
           .get(`/api/users/${user.id}/games`)
           .set('Authorization', `Bearer ${token}`)
       ])
-        .then(([data, res]) => {
+        .then(([dbGames, res]) => {
           expect(res).to.have.status(200);
           expect(res).to.be.json;
           expect(res.body).to.be.a('array');
-          // expect(res.body).to.have.length(data.length);
+          expect(res.body).to.have.length(user.games.length);
           res.body.forEach(function (item, i) {
             expect(item).to.be.a('object');
             // Note: folderId, tags and content are optional
             expect(item).to.include.all.keys('id', 'title', 'createdAt', 'updatedAt', 'userId');
-            // expect(item.id).to.equal(data[i].id);
-            // expect(item.title).to.equal(data[i].title);
-            // expect(item.userId).to.equal(data[i].userId.toString());
-            // expect(new Date(item.createdAt)).to.eql(data[i].createdAt);
-            // expect(new Date(item.updatedAt)).to.eql(data[i].updatedAt);
+            expect(item.id).to.equal(dbGames[i]['_id'].toString());
+            expect(item.title).to.equal(dbGames[i].title);
           });
         });
     });
