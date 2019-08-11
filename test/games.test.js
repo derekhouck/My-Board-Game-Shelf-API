@@ -289,6 +289,28 @@ describe('My Board Game Shelf API - Games', function () {
         });
     });
 
+    it('should add the submitted game to User.games', function () {
+      const newGame = {
+        title: 'Test Game'
+      };
+      let res;
+      return chai.request(app)
+        .post('/api/games')
+        .set('Authorization', `Bearer ${token}`)
+        .send(newGame)
+        .then(_res => {
+          res = _res;
+          expect(res).to.have.status(201);
+          expect(res.body).to.be.an('object');
+          expect(res.body).to.include.keys('id', 'title');
+          expect(res.body.title).to.equal(newGame.title);
+          return User.findById(user.id);
+        })
+        .then(userData => {
+          expect(userData.games).to.include(res.body.id);
+        });
+    });
+
     it('should return an error when missing "title" field', function () {
       const newItem = {
       };

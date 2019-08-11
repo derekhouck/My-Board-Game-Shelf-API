@@ -4,6 +4,7 @@ const passport = require('passport');
 
 const Game = require('../models/game');
 const Tag = require('../models/tag');
+const User = require('../models/user');
 
 const { isValidId, requiredFields } = require('./validators');
 
@@ -127,8 +128,9 @@ router.post('/',
   (req, res, next) => {
     const { title, minPlayers, maxPlayers, tags } = req.body;
     const userId = req.user.id;
+    let createdGame;
 
-    const newGame = {
+    const gameInfo = {
       title,
       players: {
         min: minPlayers,
@@ -138,10 +140,16 @@ router.post('/',
       userId
     };
 
-    validateTagIds(newGame.tags, userId)
-      .then(() => Game.create(newGame))
+    validateTagIds(gameInfo.tags, userId)
+      .then(() => Game.create(gameInfo))
+      .then(game => {
+        createdGame = game;
+        return User.findByIdAndUpdate(userId, {
+          $push: { "games": game.id }
+        }, { new: true });
+      })
       .then(result => {
-        res.location(`${req.originalUrl}/${result.id}`).status(201).json(result);
+        res.location(`${req.originalUrl}/${createdGame.id}`).status(201).json(createdGame);
       })
       .catch(err => next(err));
   });
