@@ -74,10 +74,11 @@ describe('My Board Game Shelf API - Games', function () {
           res.body.forEach(function (item, i) {
             expect(item).to.be.a('object');
             // Note: folderId, tags and content are optional
-            expect(item).to.include.all.keys('id', 'title', 'createdAt', 'updatedAt', 'userId');
+            expect(item).to.have.all.keys(
+              'id', 'title', 'createdAt', 'players', 'tags', 'updatedAt'
+            );
             expect(item.id).to.equal(data[i].id);
             expect(item.title).to.equal(data[i].title);
-            expect(item.userId).to.equal(data[i].userId.toString());
             expect(new Date(item.createdAt)).to.eql(data[i].createdAt);
             expect(new Date(item.updatedAt)).to.eql(data[i].updatedAt);
           });
@@ -203,7 +204,7 @@ describe('My Board Game Shelf API - Games', function () {
   describe('GET /api/games/:id', function () {
     it('should return correct games', function () {
       let data;
-      return Game.findOne({ userId: user.id })
+      return Game.findOne()
         .then(_data => {
           data = _data;
           return chai.request(app)
@@ -214,11 +215,12 @@ describe('My Board Game Shelf API - Games', function () {
           expect(res).to.have.status(200);
           expect(res).to.be.json;
           expect(res.body).to.be.an('object');
-          expect(res.body).to.include.all.keys('id', 'title', 'createdAt', 'updatedAt', 'userId');
+          expect(res.body).to.have.all.keys(
+            'id', 'title', 'createdAt', 'players', 'tags', 'updatedAt'
+          );
           expect(res.body.id).to.equal(data.id);
           expect(res.body.title).to.equal(data.title);
           expect(res.body.content).to.equal(data.content);
-          expect(res.body.userId).to.equal(data.userId.toString());
           expect(new Date(res.body.createdAt)).to.eql(data.createdAt);
           expect(new Date(res.body.updatedAt)).to.eql(data.updatedAt);
         });
@@ -277,13 +279,12 @@ describe('My Board Game Shelf API - Games', function () {
           expect(res).to.have.header('location');
           expect(res).to.be.json;
           expect(res.body).to.be.a('object');
-          expect(res.body).to.have.all.keys('id', 'title', 'createdAt', 'updatedAt', 'tags', 'userId');
-          return Game.findOne({ _id: res.body.id, userId: user.id });
+          expect(res.body).to.have.all.keys('id', 'title', 'createdAt', 'updatedAt', 'tags');
+          return Game.findById(res.body.id);
         })
         .then(data => {
           expect(res.body.id).to.equal(data.id);
           expect(res.body.title).to.equal(data.title);
-          expect(res.body.userId).to.equal(data.userId.toString());
           expect(new Date(res.body.createdAt)).to.eql(data.createdAt);
           expect(new Date(res.body.updatedAt)).to.eql(data.updatedAt);
         });
@@ -419,9 +420,7 @@ describe('My Board Game Shelf API - Games', function () {
     it('should update the game when provided a valid title', function () {
       const updateItem = { title: 'Updated Title' };
       let data;
-      return Game.findOne({
-        userId: user.id
-      })
+      return Game.findOne()
         .then(_data => {
           data = _data;
           return chai.request(app)
@@ -446,9 +445,7 @@ describe('My Board Game Shelf API - Games', function () {
     it('should update the game when provided valid min and max player data', function () {
       const updateItem = { minPlayers: 14, maxPlayers: 41 };
       let data;
-      return Game.findOne({
-        userId: user.id
-      })
+      return Game.findOne()
         .then(_data => {
           data = _data;
           return chai.request(app)
@@ -478,9 +475,7 @@ describe('My Board Game Shelf API - Games', function () {
 
       return Promise.all([
         Tag.findOne(),
-        Game.findOne({
-          userId: user.id
-        })
+        Game.findOne()
       ])
         .then(([tag, note]) => {
           updateItem.tags.push(tag.id);
@@ -535,7 +530,7 @@ describe('My Board Game Shelf API - Games', function () {
     it('should return an error when "title" is an empty string', function () {
       const updateItem = { title: '' };
       let data;
-      return Game.findOne({ userId: user.id })
+      return Game.findOne()
         .then(_data => {
           data = _data;
           return chai.request(app)
@@ -557,7 +552,7 @@ describe('My Board Game Shelf API - Games', function () {
         maxPlayers: 'not a number'
       };
       let data;
-      return Game.findOne({ userId: user.id })
+      return Game.findOne()
         .then(_data => {
           data = _data;
           return chai.request(app)
@@ -579,7 +574,7 @@ describe('My Board Game Shelf API - Games', function () {
         maxPlayers: 1
       };
       let data;
-      return Game.findOne({ userId: user.id })
+      return Game.findOne()
         .then(_data => {
           data = _data;
           return chai.request(app)
@@ -599,7 +594,7 @@ describe('My Board Game Shelf API - Games', function () {
       const updateItem = {
         tags: ['NOT-A-VALID-ID']
       };
-      return Game.findOne({ userId: user.id })
+      return Game.findOne()
         .then(data => {
           return chai.request(app)
             .put(`/api/games/${data.id}`)
@@ -639,7 +634,7 @@ describe('My Board Game Shelf API - Games', function () {
   describe('DELETE /api/games/:id', function () {
     it('should delete an existing game and respond with 204', function () {
       let data;
-      return Game.findOne({ userId: user.id })
+      return Game.findOne()
         .then(_data => {
           data = _data;
 

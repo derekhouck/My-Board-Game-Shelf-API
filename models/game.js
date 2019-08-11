@@ -9,7 +9,6 @@ const schema = new mongoose.Schema({
     max: Number
   },
   tags: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tag' }],
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
 });
 
 // Add `createdAt` and `updatedAt` fields

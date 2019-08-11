@@ -419,286 +419,6 @@ describe("My Board Game Shelf API - Users", function () {
     });
   });
 
-  describe("GET /api/users/:id/games", function () {
-    it('should return the correct number of Games', function () {
-      return chai.request(app)
-        .get(`/api/users/${user.id}/games`)
-        .set('Authorization', `Bearer ${token}`)
-        .then(res => {
-          expect(user.games.length).to.not.equal(0);
-          expect(res).to.have.status(200);
-          expect(res).to.be.json;
-          expect(res.body).to.be.a('array');
-          expect(res.body).to.have.length(user.games.length);
-        });
-    });
-    it('should return a list sorted asc with the correct fields', function () {
-      return Promise.all([
-        Game.find({ '_id': { $in: user.games } }).sort({ title: 'asc' }),
-        chai.request(app)
-          .get(`/api/users/${user.id}/games`)
-          .set('Authorization', `Bearer ${token}`)
-      ])
-        .then(([dbGames, res]) => {
-          expect(res).to.have.status(200);
-          expect(res).to.be.json;
-          expect(res.body).to.be.a('array');
-          expect(res.body).to.have.length(user.games.length);
-          res.body.forEach(function (item, i) {
-            expect(item).to.be.a('object');
-            // Note: folderId, tags and content are optional
-            expect(item).to.include.all.keys('id', 'title', 'createdAt', 'updatedAt', 'userId');
-            expect(item.id).to.equal(dbGames[i]['_id'].toString());
-            expect(item.title).to.equal(dbGames[i].title);
-          });
-        });
-    });
-
-    it('should return correct search results for a searchTerm query', function () {
-      const searchTerm = 'king';
-      const re = new RegExp(searchTerm, 'i');
-
-      return chai.request(app)
-        .get(`/api/users/${user.id}/games?searchTerm=${searchTerm}`)
-        .set('Authorization', `Bearer ${token}`)
-        .then(res => {
-          expect(res).to.have.status(200);
-          expect(res).to.be.json;
-          expect(res.body).to.be.a('array');
-          res.body.forEach(function (item, i) {
-            expect(item).to.be.a('object');
-            expect(item).to.include.all.keys('id', 'title', 'createdAt', 'updatedAt');
-            expect(re.test(item.title)).to.equal(true);
-          });
-        });
-    });
-
-    it('should return correct search results for a number of players query', function () {
-      const players = 7;
-
-      return chai.request(app)
-        .get(`/api/users/${user.id}/games?players=${players}`)
-        .set('Authorization', `Bearer ${token}`)
-        .then(res => {
-          expect(res).to.have.status(200);
-          expect(res).to.be.json;
-          expect(res.body).to.be.a('array');
-          res.body.forEach(function (item, i) {
-            expect(item).to.be.a('object');
-            expect(item).to.include.all.keys('id', 'title', 'createdAt', 'updatedAt', 'players');
-            expect(item.players.min <= players).to.equal(true);
-            expect(item.players.max >= players).to.equal(true);
-          });
-        });
-    });
-
-    it('should return correct search results for a tagId query', function () {
-      return Tag.findOne()
-        .then(data => {
-          return Promise.all([
-            Game.find({ tags: data.id }),
-            chai.request(app)
-              .get(`/api/users/${user.id}/games?tagId=${data.id}`)
-              .set('Authorization', `Bearer ${token}`)
-          ]);
-        })
-        .then(([data, res]) => {
-          expect(res).to.have.status(200);
-          expect(res).to.be.json;
-          expect(res.body).to.be.a('array');
-          expect(res.body).to.have.length(data.length);
-        });
-    });
-    it('should return an empty array for an incorrect query', function () {
-      const searchTerm = 'NOT-A-VALID-QUERY';
-
-      const re = new RegExp(searchTerm, 'i');
-      const dbPromise = Game
-        .find({
-          userId: user.id,
-          title: re
-        })
-        .sort({ title: 'asc' });
-
-      const apiPromise = chai.request(app)
-        .get(`/api/users/${user.id}/games?searchTerm=${searchTerm}`)
-        .set('Authorization', `Bearer ${token}`);
-
-      return Promise.all([dbPromise, apiPromise])
-        .then(([data, res]) => {
-          expect(res).to.have.status(200);
-          expect(res).to.be.json;
-          expect(res.body).to.be.a('array');
-          expect(res.body).to.have.length(data.length);
-        });
-    });
-    it('should catch errors and respond properly', function () {
-      sandbox.stub(Game.schema.options.toJSON, 'transform').throws('FakeError');
-
-      return chai.request(app)
-        .get(`/api/users/${user.id}/games`)
-        .set('Authorization', `Bearer ${token}`)
-        .then(res => {
-          expect(res).to.have.status(500);
-          expect(res).to.be.json;
-          expect(res.body).to.be.a('object');
-          expect(res.body.message).to.equal('Internal Server Error');
-        });
-    });
-  });
-
-  describe("POST /api/users/:id/games", function () {
-    it('should add a game when provided a valid gameId', function () {
-      return Game.findOne()
-        .then(game => {
-          const reqBody = { gameId: game.id };
-
-          return chai.request(app)
-            .post(`/api/users/${user.id}/games`)
-            .set('Authorization', `Bearer ${token}`)
-            .send(reqBody);
-        })
-        .then(res => {
-          expect(res).to.have.status(200);
-          expect(res.body).to.be.an('array');
-          expect(res.body.length).to.equal(user.games.length + 1);
-        });
-    });
-
-    it('should return an error when missing "gameId" field', function () {
-      const reqBody = {};
-
-      return chai.request(app)
-        .post(`/api/users/${user.id}/games`)
-        .set('Authorization', `Bearer ${token}`)
-        .send(reqBody)
-        .then(res => {
-          expect(res).to.have.status(400);
-          expect(res).to.be.json;
-          expect(res.body).to.be.a('object');
-          expect(res.body.message).to.equal('Missing gameId in request body');
-        });
-    });
-
-    it('should return an error when "gameId" is not valid', function () {
-      const reqBody = {
-        gameId: 'NOT-A-VALID-ID'
-      };
-
-      return chai.request(app)
-        .post(`/api/users/${user.id}/games`)
-        .set('Authorization', `Bearer ${token}`)
-        .send(reqBody)
-        .then(res => {
-          expect(res).to.have.status(400);
-          expect(res).to.be.json;
-          expect(res.body).to.be.a('object');
-          expect(res.body.message).to.equal('The `id` is not valid');
-        });
-    });
-
-    it('should respond with a 404 for an id that does not exist', function () {
-      const reqBody = {
-        gameId: 'DOESNOTEXIST'
-      }
-
-      return chai.request(app)
-        .post(`/api/users/${user.id}/games`)
-        .set('Authorization', `Bearer ${token}`)
-        .send(reqBody)
-        .then(res => {
-          expect(res).to.have.status(404);
-        })
-    });
-
-    it('should catch errors and respond properly', function () {
-      sandbox.stub(Game.schema.options.toJSON, 'transform').throws('FakeError');
-      return Game.findOne()
-        .then(game => {
-          const reqBody = { gameId: game.id };
-
-          return chai.request(app)
-            .post(`/api/users/${user.id}/games`)
-            .set('Authorization', `Bearer ${token}`)
-            .send(reqBody);
-        })
-        .then(res => {
-          expect(res).to.have.status(500);
-          expect(res).to.be.json;
-          expect(res.body).to.be.a('object');
-          expect(res.body.message).to.equal('Internal Server Error');
-        });
-    });
-  });
-
-  describe("DELETE /api/users/:id/games", function () {
-    it('should delete an existing game and respond with remaining games', function () {
-      const gameId = user.games[0]
-      const reqBody = { gameId: gameId };
-
-      return chai.request(app)
-        .delete(`/api/users/${user.id}/games`)
-        .set('Authorization', `Bearer ${token}`)
-        .send(reqBody)
-        .then(res => {
-          expect(res).to.have.status(200);
-          expect(res.body).to.be.an('array');
-          expect(res.body.length).to.equal(user.games.length - 1);
-        });
-    });
-
-    it('should return an error when missing gameId field', function () {
-      const reqBody = {};
-
-      return chai.request(app)
-        .delete(`/api/users/${user.id}/games`)
-        .set('Authorization', `Bearer ${token}`)
-        .send(reqBody)
-        .then(res => {
-          expect(res).to.have.status(400);
-          expect(res).to.be.json;
-          expect(res.body).to.be.a('object');
-          expect(res.body.message).to.equal('Missing gameId in request body');
-        });
-    });
-
-    it('should respond with a 400 for an invalid gameId', function () {
-      const reqBody = {
-        gameId: 'NOT-A-VALID-ID'
-      };
-
-      return chai.request(app)
-        .delete(`/api/users/${user.id}/games`)
-        .set('Authorization', `Bearer ${token}`)
-        .send(reqBody)
-        .then(res => {
-          expect(res).to.have.status(400);
-          expect(res).to.be.json;
-          expect(res.body).to.be.a('object');
-          expect(res.body.message).to.equal('The `id` is not valid');
-        });
-    });
-
-    it('should catch errors and respond properly', function () {
-      sandbox.stub(Game.schema.options.toJSON, 'transform').throws('FakeError');
-      return Game.findOne()
-        .then(game => {
-          const reqBody = { gameId: game.id };
-
-          return chai.request(app)
-            .delete(`/api/users/${user.id}/games`)
-            .set('Authorization', `Bearer ${token}`)
-            .send(reqBody);
-        })
-        .then(res => {
-          expect(res).to.have.status(500);
-          expect(res).to.be.json;
-          expect(res.body).to.be.a('object');
-          expect(res.body.message).to.equal('Internal Server Error');
-        });
-    });
-  });
-
   describe("PUT /api/users", function () {
     it("should update the user when provided a valid name", function () {
       const updateData = { name: "Updated Name" };
@@ -1024,6 +744,288 @@ describe("My Board Game Shelf API - Users", function () {
     });
   });
 
+  describe("GET /api/users/:id/games", function () {
+    it('should return the correct number of Games', function () {
+      return chai.request(app)
+        .get(`/api/users/${user.id}/games`)
+        .set('Authorization', `Bearer ${token}`)
+        .then(res => {
+          expect(user.games.length).to.not.equal(0);
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('array');
+          expect(res.body).to.have.length(user.games.length);
+        });
+    });
+    it('should return a list sorted asc with the correct fields', function () {
+      return Promise.all([
+        Game.find({ '_id': { $in: user.games } }).sort({ title: 'asc' }),
+        chai.request(app)
+          .get(`/api/users/${user.id}/games`)
+          .set('Authorization', `Bearer ${token}`)
+      ])
+        .then(([dbGames, res]) => {
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('array');
+          expect(res.body).to.have.length(user.games.length);
+          res.body.forEach(function (item, i) {
+            expect(item).to.be.a('object');
+            // Note: folderId, tags and content are optional
+            expect(item).to.have.all.keys(
+              'id', 'title', 'createdAt', 'players', 'tags', 'updatedAt'
+            );
+            expect(item.id).to.equal(dbGames[i]['_id'].toString());
+            expect(item.title).to.equal(dbGames[i].title);
+          });
+        });
+    });
+
+    it('should return correct search results for a searchTerm query', function () {
+      const searchTerm = 'king';
+      const re = new RegExp(searchTerm, 'i');
+
+      return chai.request(app)
+        .get(`/api/users/${user.id}/games?searchTerm=${searchTerm}`)
+        .set('Authorization', `Bearer ${token}`)
+        .then(res => {
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('array');
+          res.body.forEach(function (item, i) {
+            expect(item).to.be.a('object');
+            expect(item).to.include.all.keys('id', 'title', 'createdAt', 'updatedAt');
+            expect(re.test(item.title)).to.equal(true);
+          });
+        });
+    });
+
+    it('should return correct search results for a number of players query', function () {
+      const players = 7;
+
+      return chai.request(app)
+        .get(`/api/users/${user.id}/games?players=${players}`)
+        .set('Authorization', `Bearer ${token}`)
+        .then(res => {
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('array');
+          res.body.forEach(function (item, i) {
+            expect(item).to.be.a('object');
+            expect(item).to.include.all.keys('id', 'title', 'createdAt', 'updatedAt', 'players');
+            expect(item.players.min <= players).to.equal(true);
+            expect(item.players.max >= players).to.equal(true);
+          });
+        });
+    });
+
+    it('should return correct search results for a tagId query', function () {
+      return Tag.findOne()
+        .then(data => {
+          return Promise.all([
+            Game.find({ tags: data.id }),
+            chai.request(app)
+              .get(`/api/users/${user.id}/games?tagId=${data.id}`)
+              .set('Authorization', `Bearer ${token}`)
+          ]);
+        })
+        .then(([data, res]) => {
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('array');
+          expect(res.body).to.have.length(data.length);
+        });
+    });
+    it('should return an empty array for an incorrect query', function () {
+      const searchTerm = 'NOT-A-VALID-QUERY';
+
+      const re = new RegExp(searchTerm, 'i');
+      const dbPromise = Game
+        .find({
+          userId: user.id,
+          title: re
+        })
+        .sort({ title: 'asc' });
+
+      const apiPromise = chai.request(app)
+        .get(`/api/users/${user.id}/games?searchTerm=${searchTerm}`)
+        .set('Authorization', `Bearer ${token}`);
+
+      return Promise.all([dbPromise, apiPromise])
+        .then(([data, res]) => {
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('array');
+          expect(res.body).to.have.length(data.length);
+        });
+    });
+    it('should catch errors and respond properly', function () {
+      sandbox.stub(Game.schema.options.toJSON, 'transform').throws('FakeError');
+
+      return chai.request(app)
+        .get(`/api/users/${user.id}/games`)
+        .set('Authorization', `Bearer ${token}`)
+        .then(res => {
+          expect(res).to.have.status(500);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('Internal Server Error');
+        });
+    });
+  });
+
+  describe("POST /api/users/:id/games", function () {
+    it('should add a game when provided a valid gameId', function () {
+      return Game.findOne()
+        .then(game => {
+          const reqBody = { gameId: game.id };
+
+          return chai.request(app)
+            .post(`/api/users/${user.id}/games`)
+            .set('Authorization', `Bearer ${token}`)
+            .send(reqBody);
+        })
+        .then(res => {
+          expect(res).to.have.status(200);
+          expect(res.body).to.be.an('array');
+          expect(res.body.length).to.equal(user.games.length + 1);
+        });
+    });
+
+    it('should return an error when missing "gameId" field', function () {
+      const reqBody = {};
+
+      return chai.request(app)
+        .post(`/api/users/${user.id}/games`)
+        .set('Authorization', `Bearer ${token}`)
+        .send(reqBody)
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('Missing gameId in request body');
+        });
+    });
+
+    it('should return an error when "gameId" is not valid', function () {
+      const reqBody = {
+        gameId: 'NOT-A-VALID-ID'
+      };
+
+      return chai.request(app)
+        .post(`/api/users/${user.id}/games`)
+        .set('Authorization', `Bearer ${token}`)
+        .send(reqBody)
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('The `id` is not valid');
+        });
+    });
+
+    it('should respond with a 404 for an id that does not exist', function () {
+      const reqBody = {
+        gameId: 'DOESNOTEXIST'
+      }
+
+      return chai.request(app)
+        .post(`/api/users/${user.id}/games`)
+        .set('Authorization', `Bearer ${token}`)
+        .send(reqBody)
+        .then(res => {
+          expect(res).to.have.status(404);
+        })
+    });
+
+    it('should catch errors and respond properly', function () {
+      sandbox.stub(Game.schema.options.toJSON, 'transform').throws('FakeError');
+      return Game.findOne()
+        .then(game => {
+          const reqBody = { gameId: game.id };
+
+          return chai.request(app)
+            .post(`/api/users/${user.id}/games`)
+            .set('Authorization', `Bearer ${token}`)
+            .send(reqBody);
+        })
+        .then(res => {
+          expect(res).to.have.status(500);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('Internal Server Error');
+        });
+    });
+  });
+
+  describe("DELETE /api/users/:id/games", function () {
+    it('should delete an existing game and respond with remaining games', function () {
+      const gameId = user.games[0]
+      const reqBody = { gameId: gameId };
+
+      return chai.request(app)
+        .delete(`/api/users/${user.id}/games`)
+        .set('Authorization', `Bearer ${token}`)
+        .send(reqBody)
+        .then(res => {
+          expect(res).to.have.status(200);
+          expect(res.body).to.be.an('array');
+          expect(res.body.length).to.equal(user.games.length - 1);
+        });
+    });
+
+    it('should return an error when missing gameId field', function () {
+      const reqBody = {};
+
+      return chai.request(app)
+        .delete(`/api/users/${user.id}/games`)
+        .set('Authorization', `Bearer ${token}`)
+        .send(reqBody)
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('Missing gameId in request body');
+        });
+    });
+
+    it('should respond with a 400 for an invalid gameId', function () {
+      const reqBody = {
+        gameId: 'NOT-A-VALID-ID'
+      };
+
+      return chai.request(app)
+        .delete(`/api/users/${user.id}/games`)
+        .set('Authorization', `Bearer ${token}`)
+        .send(reqBody)
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('The `id` is not valid');
+        });
+    });
+
+    it('should catch errors and respond properly', function () {
+      sandbox.stub(Game.schema.options.toJSON, 'transform').throws('FakeError');
+      return Game.findOne()
+        .then(game => {
+          const reqBody = { gameId: game.id };
+
+          return chai.request(app)
+            .delete(`/api/users/${user.id}/games`)
+            .set('Authorization', `Bearer ${token}`)
+            .send(reqBody);
+        })
+        .then(res => {
+          expect(res).to.have.status(500);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('Internal Server Error');
+        });
+    });
+  });
+
   describe("DELETE /api/users", function () {
     it("should delete the logged in user and respond with 204", function () {
       return chai
@@ -1039,20 +1041,15 @@ describe("My Board Game Shelf API - Users", function () {
         });
     });
 
-    it("should delete an existing user and remove all of their games", function () {
+    it("should not delete any games", function () {
       let allGames;
-      return Promise.all([Game.find(), Game.find({ userId: user.id })])
-        .then(([_allGames, userGames]) => {
+      return Game.find()
+        .then(_allGames => {
           allGames = _allGames;
 
           expect(allGames).to.be.an("array");
-          expect(userGames).to.be.an("array");
           expect(allGames).to.not.have.length(0);
-          expect(userGames).to.not.have.length(0);
-          expect(allGames.length).to.not.equal(userGames.length);
-          userGames.forEach(game => {
-            expect(game.userId.toString()).to.equal(user.id.toString());
-          });
+
           return chai
             .request(app)
             .delete(`/api/users/${user.id}`)
@@ -1061,15 +1058,11 @@ describe("My Board Game Shelf API - Users", function () {
         .then(res => {
           expect(res).to.have.status(204);
           expect(res.body).to.be.empty;
-          return Promise.all([
-            Game.countDocuments(),
-            Game.countDocuments({ userId: user.id })
-          ]);
+          return Game.countDocuments();
         })
-        .then(([allGamesCount, userGamesCount]) => {
-          expect(userGamesCount).to.equal(0);
+        .then(allGamesCount => {
           expect(allGamesCount).to.not.equal(0);
-          expect(allGamesCount).to.not.equal(allGames.length);
+          expect(allGamesCount).to.equal(allGames.length);
         });
     });
 
@@ -1086,7 +1079,7 @@ describe("My Board Game Shelf API - Users", function () {
 
     it("should respond with a 400 when given a different user id", function () {
       let user2 = {};
-      let user2Games;
+      let allGames;
       return User.find()
         .then(users => {
           expect(users).to.be.an("Array");
@@ -1095,18 +1088,15 @@ describe("My Board Game Shelf API - Users", function () {
           );
           expect(filteredUsers.length).to.not.equal(0);
           user2 = filteredUsers[0];
-          expect(user2).to.be.an("object");
           expect(user2.id).to.not.equal(user.id);
           expect(user2.username).to.not.equal(user.username);
-          return Game.find({ userId: user2.id });
+          return Game.find();
         })
         .then(games => {
-          user2Games = games;
-          expect(user2Games).to.be.an("Array");
-          expect(user2Games).to.not.have.length(0);
-          user2Games.forEach(game => {
-            expect(game.userId.toString()).to.equal(user2.id.toString());
-          });
+          allGames = games;
+          expect(allGames).to.be.an("Array");
+          expect(allGames).to.not.have.length(0);
+
           return chai
             .request(app)
             .delete(`/api/users/${user2.id}`)
@@ -1119,12 +1109,12 @@ describe("My Board Game Shelf API - Users", function () {
           );
           return Promise.all([
             User.countDocuments({ _id: user2.id }),
-            Game.countDocuments({ userId: user2.id })
+            Game.countDocuments()
           ]);
         })
         .then(([userCount, gamesCount]) => {
           expect(userCount).to.equal(1);
-          expect(gamesCount).to.equal(user2Games.length);
+          expect(gamesCount).to.equal(allGames.length);
         });
     });
 

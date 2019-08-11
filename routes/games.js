@@ -41,7 +41,7 @@ const validatePlayers = (req, res, next) => {
   return next();
 };
 
-const validateTagIds = (tags, userId) => {
+const validateTagIds = tags => {
   if (tags === undefined) {
     return Promise.resolve();
   }
@@ -106,9 +106,8 @@ router.get('/', (req, res, next) => {
 // GET /api/games/:id
 router.get('/:id', jwtAuth, isValidId, (req, res, next) => {
   const { id } = req.params;
-  const userId = req.user.id;
 
-  Game.findOne({ _id: id, userId })
+  Game.findById(id)
     .populate('tags')
     .then(result => {
       if (result) {
@@ -140,7 +139,7 @@ router.post('/',
       userId
     };
 
-    validateTagIds(gameInfo.tags, userId)
+    validateTagIds(gameInfo.tags)
       .then(() => Game.create(gameInfo))
       .then(game => {
         createdGame = game;
@@ -161,7 +160,6 @@ router.put('/:id',
   validatePlayers,
   (req, res, next) => {
     const { id } = req.params;
-    const userId = req.user.id;
 
     const toUpdate = {};
     const updateableFields = ['title', 'minPlayers', 'maxPlayers', 'tags'];
@@ -181,10 +179,10 @@ router.put('/:id',
       return next(err);
     }
 
-    validateTagIds(toUpdate.tags, userId)
+    validateTagIds(toUpdate.tags)
       .then(() => {
         return Game
-          .findOneAndUpdate({ _id: id, userId }, toUpdate, { new: true })
+          .findByIdAndUpdate(id, toUpdate, { new: true })
           .populate('tags');
       })
       .then(result => {
