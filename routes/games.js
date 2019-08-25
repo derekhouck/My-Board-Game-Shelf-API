@@ -6,7 +6,9 @@ const Game = require('../models/game');
 const Tag = require('../models/tag');
 const User = require('../models/user');
 
-const { isValidId, requiredFields } = require('./validators');
+const {
+  isValidId, requiredFields, requiresAdmin
+} = require('./validators');
 
 const jwtAuth = passport.authenticate('jwt', { session: false, failWithError: true });
 const router = express.Router();
@@ -156,6 +158,7 @@ router.post('/',
 // PUT /api/games/:id
 router.put('/:id',
   jwtAuth,
+  requiresAdmin,
   isValidId,
   validatePlayers,
   (req, res, next) => {

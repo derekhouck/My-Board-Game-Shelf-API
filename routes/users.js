@@ -4,7 +4,9 @@ const passport = require('passport');
 const User = require('../models/user');
 const Game = require('../models/game');
 
-const { isFieldValidId, isValidId, requiredFields } = require('./validators');
+const {
+  isFieldValidId, isValidId, requiredFields, requiresAdmin
+} = require('./validators');
 
 const router = express.Router();
 
@@ -94,14 +96,6 @@ const validateFieldSizes = (req, res, next) => {
   }
 };
 
-const requiresAdmin = (req, res, next) => {
-  if (!req.user.admin) {
-    const err = new Error('Unauthorized');
-    err.status = 401;
-    next(err);
-  }
-};
-
 // POST /api/users
 router.post('/',
   validateStringFields,
@@ -167,14 +161,15 @@ router.post('/:id/games',
   });
 
 // GET /api/users
-router.get('/', jwtAuth, (req, res, next) => {
-  requiresAdmin(req, res, next);
-
-  return User
-    .find()
-    .then(users => res.json(users))
-    .catch(err => next(err));
-});
+router.get('/',
+  jwtAuth,
+  requiresAdmin,
+  (req, res, next) =>
+    User
+      .find()
+      .then(users => res.json(users))
+      .catch(err => next(err))
+);
 
 router.get('/:id', isValidId, (req, res, next) => {
   const { id } = req.params;
@@ -235,7 +230,11 @@ router.put('/:id',
       if (field in req.body) {
         switch (field) {
           case 'admin':
-            requiresAdmin(req, res, next);
+            if (!req.user.admin) {
+              const err = new Error('Unauthorized');
+              err.status = 401;
+              next(err);
+            }
             return toUpdate[field] = req.body[field];
           case 'digest':
             return toUpdate['password'] = req.body[field];

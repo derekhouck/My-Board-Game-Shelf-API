@@ -20,8 +20,9 @@ const expect = chai.expect;
 const sandbox = sinon.createSandbox();
 
 describe('My Board Game Shelf API - Games', function () {
+  let admin = {};
   let user = {};
-  let token;
+  let adminToken, token;
 
   before(() => dbConnect(TEST_DATABASE_URL));
 
@@ -33,7 +34,9 @@ describe('My Board Game Shelf API - Games', function () {
       User.createIndexes()
     ])
       .then(([users]) => {
-        user = users[0];
+        admin = users.find(user => user.admin);
+        user = users.find(user => !user.admin);
+        adminToken = jwt.sign({ user: admin }, JWT_SECRET, { subject: admin.username });
         token = jwt.sign({ user }, JWT_SECRET, { subject: user.username });
       });
   });
@@ -425,7 +428,7 @@ describe('My Board Game Shelf API - Games', function () {
           data = _data;
           return chai.request(app)
             .put(`/api/games/${data.id}`)
-            .set('Authorization', `Bearer ${token}`)
+            .set('Authorization', `Bearer ${adminToken}`)
             .send(updateItem);
         })
         .then(function (res) {
@@ -450,7 +453,7 @@ describe('My Board Game Shelf API - Games', function () {
           data = _data;
           return chai.request(app)
             .put(`/api/games/${data.id}`)
-            .set('Authorization', `Bearer ${token}`)
+            .set('Authorization', `Bearer ${adminToken}`)
             .send(updateItem);
         })
         .then(function (res) {
@@ -482,7 +485,7 @@ describe('My Board Game Shelf API - Games', function () {
           data = note;
           return chai.request(app)
             .put(`/api/games/${note.id}`)
-            .set('Authorization', `Bearer ${token}`)
+            .set('Authorization', `Bearer ${adminToken}`)
             .send(updateItem);
         })
         .then(function (res) {
@@ -499,13 +502,29 @@ describe('My Board Game Shelf API - Games', function () {
         });
     });
 
+    it('should reject requests from non-admins', function () {
+      const updateItem = { title: 'Updated Title' };
+      return Game.findOne()
+        .then(game => {
+          return chai.request(app)
+            .put(`/api/games/${game.id}`)
+            .set('Authorization', `Bearer ${token}`)
+            .send(updateItem);
+        })
+        .then(res => {
+          expect(res).to.have.status(401);
+          expect(res.body).to.be.an("object");
+          expect(res.body.message).to.equal("Unauthorized");
+        });
+    });
+
     it('should respond with status 400 and an error message when `id` is not valid', function () {
       const updateItem = {
         title: 'Updated Title'
       };
       return chai.request(app)
         .put('/api/games/NOT-A-VALID-ID')
-        .set('Authorization', `Bearer ${token}`)
+        .set('Authorization', `Bearer ${adminToken}`)
         .send(updateItem)
         .then(res => {
           expect(res).to.have.status(400);
@@ -520,7 +539,7 @@ describe('My Board Game Shelf API - Games', function () {
       };
       return chai.request(app)
         .put('/api/games/DOESNOTEXIST')
-        .set('Authorization', `Bearer ${token}`)
+        .set('Authorization', `Bearer ${adminToken}`)
         .send(updateItem)
         .then(res => {
           expect(res).to.have.status(404);
@@ -535,7 +554,7 @@ describe('My Board Game Shelf API - Games', function () {
           data = _data;
           return chai.request(app)
             .put(`/api/games/${data.id}`)
-            .set('Authorization', `Bearer ${token}`)
+            .set('Authorization', `Bearer ${adminToken}`)
             .send(updateItem);
         })
         .then(res => {
@@ -557,7 +576,7 @@ describe('My Board Game Shelf API - Games', function () {
           data = _data;
           return chai.request(app)
             .put(`/api/games/${data.id}`)
-            .set('Authorization', `Bearer ${token}`)
+            .set('Authorization', `Bearer ${adminToken}`)
             .send(updateItem);
         })
         .then(res => {
@@ -579,7 +598,7 @@ describe('My Board Game Shelf API - Games', function () {
           data = _data;
           return chai.request(app)
             .put(`/api/games/${data.id}`)
-            .set('Authorization', `Bearer ${token}`)
+            .set('Authorization', `Bearer ${adminToken}`)
             .send(updateItem);
         })
         .then(res => {
@@ -598,7 +617,7 @@ describe('My Board Game Shelf API - Games', function () {
         .then(data => {
           return chai.request(app)
             .put(`/api/games/${data.id}`)
-            .set('Authorization', `Bearer ${token}`)
+            .set('Authorization', `Bearer ${adminToken}`)
             .send(updateItem);
         })
         .then(res => {
@@ -620,7 +639,7 @@ describe('My Board Game Shelf API - Games', function () {
           return chai.request(app)
             .put(`/api/games/${data.id}`)
             .send(updateItem)
-            .set('Authorization', `Bearer ${token}`);
+            .set('Authorization', `Bearer ${adminToken}`);
         })
         .then(res => {
           expect(res).to.have.status(500);

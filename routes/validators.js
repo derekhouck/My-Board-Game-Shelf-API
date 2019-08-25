@@ -47,4 +47,16 @@ const requiredFields = fields => {
   };
 };
 
-module.exports = { isFieldValidId, isValidId, requiredFields };
+const requiresAdmin = (req, res, next) => {
+  if (!req.user.admin) {
+    const err = new Error('Unauthorized');
+    err.status = 401;
+    next(err);
+  } else {
+    return next();
+  }
+};
+
+module.exports = {
+  isFieldValidId, isValidId, requiredFields, requiresAdmin
+};
