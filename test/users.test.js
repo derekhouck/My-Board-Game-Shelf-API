@@ -1122,7 +1122,7 @@ describe("My Board Game Shelf API - Users", function () {
       sandbox.stub(express.response, "sendStatus").throws("FakeError");
       return chai
         .request(app)
-        .delete(`/api/games/${user.id}`)
+        .delete(`/api/users/${user.id}`)
         .set("Authorization", `Bearer ${token}`)
         .then(res => {
           expect(res).to.have.status(500);

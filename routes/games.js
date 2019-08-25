@@ -199,12 +199,16 @@ router.put('/:id',
   });
 
 // DELETE /api/games/:id
-router.delete('/:id', jwtAuth, isValidId, (req, res, next) => {
-  const { id } = req.params;
+router.delete('/:id',
+  jwtAuth,
+  requiresAdmin,
+  isValidId,
+  (req, res, next) => {
+    const { id } = req.params;
 
-  Game.findOneAndDelete({ _id: id })
-    .then(() => res.sendStatus(204))
-    .catch(err => next(err));
-});
+    Game.findOneAndDelete({ _id: id })
+      .then(() => res.sendStatus(204))
+      .catch(err => next(err));
+  });
 
 module.exports = router;

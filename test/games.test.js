@@ -659,7 +659,7 @@ describe('My Board Game Shelf API - Games', function () {
 
           return chai.request(app)
             .delete(`/api/games/${data.id}`)
-            .set('Authorization', `Bearer ${token}`);
+            .set('Authorization', `Bearer ${adminToken}`);
         })
         .then(res => {
           expect(res).to.have.status(204);
@@ -670,10 +670,24 @@ describe('My Board Game Shelf API - Games', function () {
         });
     });
 
+    it('should reject requests from non-admins', function () {
+      return Game.findOne()
+        .then(game => {
+          return chai.request(app)
+            .delete(`/api/games/${game.id}`)
+            .set('Authorization', `Bearer ${token}`);
+        })
+        .then(res => {
+          expect(res).to.have.status(401);
+          expect(res.body).to.be.an("object");
+          expect(res.body.message).to.equal("Unauthorized");
+        });
+    });
+
     it('should respond with a 400 for an invalid id', function () {
       return chai.request(app)
         .delete('/api/games/NOT-A-VALID-ID')
-        .set('Authorization', `Bearer ${token}`)
+        .set('Authorization', `Bearer ${adminToken}`)
         .then(res => {
           expect(res).to.have.status(400);
           expect(res.body.message).to.equal('The `id` is not valid');
@@ -686,7 +700,7 @@ describe('My Board Game Shelf API - Games', function () {
         .then(data => {
           return chai.request(app)
             .delete(`/api/games/${data.id}`)
-            .set('Authorization', `Bearer ${token}`);
+            .set('Authorization', `Bearer ${adminToken}`);
         })
         .then(res => {
           expect(res).to.have.status(500);
