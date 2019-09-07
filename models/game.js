@@ -3,12 +3,13 @@
 const mongoose = require('mongoose');
 
 const schema = new mongoose.Schema({
-  title: { type: String, required: true },
   players: {
     min: Number,
     max: Number
   },
+  status: { type: String, default: 'pending' },
   tags: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tag' }],
+  title: { type: String, required: true },
 });
 
 // Add `createdAt` and `updatedAt` fields

@@ -771,8 +771,7 @@ describe("My Board Game Shelf API - Users", function () {
           expect(res.body).to.have.length(user.games.length);
           res.body.forEach(function (item, i) {
             expect(item).to.be.a('object');
-            // Note: folderId, tags and content are optional
-            expect(item).to.have.all.keys(
+            expect(item).to.include.keys(
               'id', 'title', 'createdAt', 'players', 'tags', 'updatedAt'
             );
             expect(item.id).to.equal(dbGames[i]['_id'].toString());

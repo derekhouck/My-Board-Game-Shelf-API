@@ -78,7 +78,7 @@ describe('My Board Game Shelf API - Games', function () {
             expect(item).to.be.a('object');
             // Note: folderId, tags and content are optional
             expect(item).to.have.all.keys(
-              'id', 'title', 'createdAt', 'players', 'tags', 'updatedAt'
+              'id', 'status', 'title', 'createdAt', 'players', 'tags', 'updatedAt'
             );
             expect(item.id).to.equal(data[i].id);
             expect(item.title).to.equal(data[i].title);
@@ -205,7 +205,7 @@ describe('My Board Game Shelf API - Games', function () {
   });
 
   describe('GET /api/games/:id', function () {
-    it('should return correct games', function () {
+    it('should return correct game', function () {
       let data;
       return Game.findOne()
         .then(_data => {
@@ -219,7 +219,7 @@ describe('My Board Game Shelf API - Games', function () {
           expect(res).to.be.json;
           expect(res.body).to.be.an('object');
           expect(res.body).to.have.all.keys(
-            'id', 'title', 'createdAt', 'players', 'tags', 'updatedAt'
+            'id', 'status', 'title', 'createdAt', 'players', 'tags', 'updatedAt'
           );
           expect(res.body.id).to.equal(data.id);
           expect(res.body.title).to.equal(data.title);
@@ -282,7 +282,8 @@ describe('My Board Game Shelf API - Games', function () {
           expect(res).to.have.header('location');
           expect(res).to.be.json;
           expect(res.body).to.be.a('object');
-          expect(res.body).to.have.all.keys('id', 'title', 'createdAt', 'updatedAt', 'tags');
+          expect(res.body).to.have.all.keys('id', 'status', 'title', 'createdAt', 'updatedAt', 'tags');
+          expect(res.body.status).to.equal('pending');
           return Game.findById(res.body.id);
         })
         .then(data => {
