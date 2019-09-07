@@ -503,6 +503,39 @@ describe('My Board Game Shelf API - Games', function () {
         });
     });
 
+    it('should update the game when approved or rejected', function () {
+      const approvedStatus = { status: 'approved' };
+      const rejectedStatus = { status: 'rejected' };
+      let game;
+
+      return Game.findOne()
+        .then(_game => {
+          game = _game;
+          return chai.request(app)
+            .put(`/api/games/${game.id}`)
+            .set('Authorization', `Bearer ${adminToken}`)
+            .send(approvedStatus);
+        })
+        .then(res => {
+          expect(res).to.have.status(200);
+          expect(res.body).to.include.keys('id', 'status', 'updatedAt');
+          expect(res.body.id).to.equal(game.id);
+          expect(res.body.status).to.equal(approvedStatus.status);
+          expect(new Date(res.body.updatedAt)).to.be.greaterThan(game.updatedAt);
+          return chai.request(app)
+            .put(`/api/games/${game.id}`)
+            .set('Authorization', `Bearer ${adminToken}`)
+            .send(rejectedStatus);
+        })
+        .then(res2 => {
+          expect(res2).to.have.status(200);
+          expect(res2.body).to.include.keys('id', 'status', 'updatedAt');
+          expect(res2.body.id).to.equal(game.id);
+          expect(res2.body.status).to.equal(rejectedStatus.status);
+          expect(new Date(res2.body.updatedAt)).to.be.greaterThan(game.updatedAt);
+        });
+    });
+
     it('should reject requests from non-admins', function () {
       const updateItem = { title: 'Updated Title' };
       return Game.findOne()
@@ -626,6 +659,24 @@ describe('My Board Game Shelf API - Games', function () {
           expect(res).to.be.json;
           expect(res.body).to.be.a('object');
           expect(res.body.message).to.equal('The `tags` array contains an invalid `id`');
+        });
+    });
+
+    it('should return an error when given a status other than approved or rejected', function () {
+      const invalidStatus = { status: 'NOT-A-VALID-STATUS' };
+
+      return Game.findOne()
+        .then(game => {
+          return chai.request(app)
+            .put(`/api/games/${game.id}`)
+            .set('Authorization', `Bearer ${adminToken}`)
+            .send(invalidStatus);
+        })
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res).to.be.json;
+          expect(res.body).to.be.an('object');
+          expect(res.body.message).to.equal('That is not a valid status');
         });
     });
 

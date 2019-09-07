@@ -165,7 +165,7 @@ router.put('/:id',
     const { id } = req.params;
 
     const toUpdate = {};
-    const updateableFields = ['title', 'minPlayers', 'maxPlayers', 'tags'];
+    const updateableFields = ['minPlayers', 'maxPlayers', 'status', 'tags', 'title'];
 
     updateableFields.forEach(field => {
       if ((field === 'minPlayers') || (field === 'maxPlayers')) {
@@ -175,6 +175,12 @@ router.put('/:id',
         toUpdate[field] = req.body[field];
       }
     });
+
+    if (toUpdate.status && (toUpdate.status !== 'approved' && toUpdate.status !== 'rejected')) {
+      const err = new Error('That is not a valid status');
+      err.status = 400;
+      return next(err);
+    }
 
     if (toUpdate.title === '') {
       const err = new Error('Missing `title` in request body');

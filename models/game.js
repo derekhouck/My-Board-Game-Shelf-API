@@ -7,7 +7,9 @@ const schema = new mongoose.Schema({
     min: Number,
     max: Number
   },
-  status: { type: String, default: 'pending' },
+  status: {
+    type: String, default: 'pending', enum: ['approved', 'pending', 'rejected']
+  },
   tags: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tag' }],
   title: { type: String, required: true },
 });
