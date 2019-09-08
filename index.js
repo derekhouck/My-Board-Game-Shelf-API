@@ -9,10 +9,12 @@ const { dbConnect } = require('./db-mongoose');
 const localStrategy = require('./passport/local');
 const jwtStrategy = require('./passport/jwt');
 
-const usersRouter = require('./routes/users');
+const adminRouter = require('./routes/admin');
 const authRouter = require('./routes/auth');
 const gamesRouter = require('./routes/games');
 const tagsRouter = require('./routes/tags');
+const usersRouter = require('./routes/users');
+const { requiresAdmin } = require('./routes/validators');
 
 const app = express();
 
@@ -47,9 +49,10 @@ passport.use(jwtStrategy);
 const jwtAuth = passport.authenticate('jwt', { session: false, failWithError: true });
 
 // Mount routers
-app.use('/api/users', usersRouter);
+app.use('/api/admin', jwtAuth, requiresAdmin, adminRouter);
 app.use('/api/games', gamesRouter);
 app.use('/api/tags', jwtAuth, tagsRouter);
+app.use('/api/users', usersRouter);
 app.use('/api', authRouter);
 
 // Custom 404 Not Found route handler
