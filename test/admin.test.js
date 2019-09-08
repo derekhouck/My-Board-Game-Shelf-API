@@ -41,7 +41,7 @@ describe('My Board Game Shelf API - Games', function () {
 
   after(() => dbDisconnect());
 
-  describe('GET /api/games', function () {
+  describe('GET /api/admin/games', function () {
     it('should return the correct number of Games', function () {
       return Promise.all([
         Game.find(),
