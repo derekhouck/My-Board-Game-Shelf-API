@@ -82,7 +82,9 @@ const validateTagIds = tags => {
 router.get('/', (req, res, next) => {
   const { searchTerm, players, tagId } = req.query;
 
-  let filter = {};
+  let filter = {
+    status: 'approved'
+  };
 
   if (searchTerm) {
     const re = new RegExp(searchTerm, 'i');

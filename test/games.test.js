@@ -51,7 +51,7 @@ describe('My Board Game Shelf API - Games', function () {
   describe('GET /api/games', function () {
     it('should return the correct number of Games', function () {
       return Promise.all([
-        Game.find(),
+        Game.find({ status: 'approved' }),
         chai.request(app)
           .get('/api/games')
       ])
@@ -65,7 +65,8 @@ describe('My Board Game Shelf API - Games', function () {
 
     it('should return a list sorted asc with the correct fields', function () {
       return Promise.all([
-        Game.find().sort({ title: 'asc' }),
+        Game.find({ status: 'approved' })
+          .sort({ title: 'asc' }),
         chai.request(app)
           .get('/api/games')
       ])
@@ -74,16 +75,17 @@ describe('My Board Game Shelf API - Games', function () {
           expect(res).to.be.json;
           expect(res.body).to.be.a('array');
           expect(res.body).to.have.length(data.length);
-          res.body.forEach(function (item, i) {
-            expect(item).to.be.a('object');
+          res.body.forEach(function (game, i) {
+            expect(game).to.be.a('object');
             // Note: folderId, tags and content are optional
-            expect(item).to.have.all.keys(
+            expect(game).to.have.all.keys(
               'id', 'status', 'title', 'createdAt', 'players', 'tags', 'updatedAt'
             );
-            expect(item.id).to.equal(data[i].id);
-            expect(item.title).to.equal(data[i].title);
-            expect(new Date(item.createdAt)).to.eql(data[i].createdAt);
-            expect(new Date(item.updatedAt)).to.eql(data[i].updatedAt);
+            expect(game.id).to.equal(data[i].id);
+            expect(game.status).to.equal('approved');
+            expect(game.title).to.equal(data[i].title);
+            expect(new Date(game.createdAt)).to.eql(data[i].createdAt);
+            expect(new Date(game.updatedAt)).to.eql(data[i].updatedAt);
           });
         });
     });
@@ -124,7 +126,8 @@ describe('My Board Game Shelf API - Games', function () {
       const dbPromise = Game
         .find({
           'players.min': { $lte: players },
-          'players.max': { $gte: players }
+          'players.max': { $gte: players },
+          status: 'approved',
         })
         .sort({ title: 'asc' });
 
@@ -152,11 +155,14 @@ describe('My Board Game Shelf API - Games', function () {
 
     it('should return correct search results for a tagId query', function () {
       return Tag.findOne()
-        .then(data => {
+        .then(tag => {
           return Promise.all([
-            Game.find({ tags: data.id }),
+            Game.find({
+              status: 'approved',
+              tags: tag.id,
+            }),
             chai.request(app)
-              .get(`/api/games?tagId=${data.id}`)
+              .get(`/api/games?tagId=${tag.id}`)
           ]);
         })
         .then(([data, res]) => {
