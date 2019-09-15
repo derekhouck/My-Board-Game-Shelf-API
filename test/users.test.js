@@ -428,6 +428,7 @@ describe("My Board Game Shelf API - Users", function () {
           expect(res.body).to.include.all.keys(
             'admin',
             'createdAt',
+            'email',
             'id',
             'games',
             'name',
