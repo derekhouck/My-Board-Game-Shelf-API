@@ -3,10 +3,11 @@ const bcrypt = require("bcryptjs");
 
 const schema = mongoose.Schema({
   admin: { type: Boolean, default: false },
+  email: { type: String, lowercase: true, required: true, unique: true },
   games: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Game' }],
-  username: { type: String, required: true, lowercase: true, unique: true },
-  password: { type: String, required: true },
   name: { type: String, default: "" },
+  password: { type: String, required: true },
+  username: { type: String, required: true, lowercase: true, unique: true },
 });
 
 // Add `createdAt` and `updatedAt` fields

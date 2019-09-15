@@ -103,7 +103,7 @@ router.post('/',
   validateFieldSizes,
   createDigest,
   (req, res, next) => {
-    const requiredFields = ['username', 'password'];
+    const requiredFields = ['email', 'password', 'username'];
     const missingField = requiredFields.find(field => !(field in req.body));
 
     if (missingField) {
@@ -114,24 +114,38 @@ router.post('/',
       return next(err);
     }
 
-    let { digest, username, name = '' } = req.body;
+    let { digest, email, name = '', username } = req.body;
+
+    const emailIsValid = email => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    if (!emailIsValid(email)) {
+      const err = new Error('Invalid email');
+      err.status = 422;
+      err.reason = 'ValidationError';
+      err.location = 'email';
+      return next(err);
+    }
+
     name = name.trim();
 
     return User
       .create({
-        username,
+        email,
+        name,
         password: digest,
-        name
+        username,
       })
       .then(user => {
         return res.status(201).json(user);
       })
       .catch(err => {
         if (err.code === 11000) {
-          err = new Error('Username already taken');
+          const regex = /index\:\ (?:.*\.)?\$?(?:([_a-z0-9]*)(?:_\d*)|([_a-z0-9]*))\s*dup key/i,
+            match = err.message.match(regex),
+            indexName = match[1] || match[2];
+          err = new Error(`${indexName} already exists`);
           err.status = 422;
           err.reason = 'ValidationError';
-          err.location = 'username';
+          err.location = indexName;
         }
         next(err);
       });

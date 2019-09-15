@@ -5,12 +5,14 @@ const users = [
   {
     _id: "000000000000000000000001",
     admin: true,
+    email: "ana@example.com",
     name: "Ana Admin",
     username: "ana-admin",
     password: "$2a$10$O4tYSlkzFykwKYIXIaKFXOjKYzfrwjSZmOak50rMpzhWW/aKHA06a" // "password"
   },
   {
     _id: "000000000000000000000002",
+    email: "bob@example.com",
     games: ["111111111111111111111108", "111111111111111111111107", "111111111111111111111103"],
     name: "Bob User",
     password: "$2a$10$vXjjefbggXMi5S9130.Zu.AMcQoh2TqikDOmKn/7B6hpW6l8gX56W", // "baseball"

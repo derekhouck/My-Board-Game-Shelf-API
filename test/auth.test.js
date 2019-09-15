@@ -16,6 +16,7 @@ chai.use(chaiHttp);
 
 describe('My Board Game Shelf API - Authentication', function () {
   const _id = '333333333333333333333333';
+  const email = 'test@example.com';
   const name = 'Example User';
   const username = 'exampleUser';
   const password = 'examplePass';
@@ -28,6 +29,7 @@ describe('My Board Game Shelf API - Authentication', function () {
     return User.hashPassword(password)
       .then(digest => User.create({
         _id,
+        email,
         name,
         username,
         password: digest

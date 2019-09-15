@@ -22,9 +22,10 @@ describe("My Board Game Shelf API - Users", function () {
   let user = {};
   let admin = {};
   let adminToken, token;
-  const username = "exampleUser";
-  const password = "examplePass";
+  const email = "Test@EXAMPLE.com";
   const name = "Example User";
+  const password = "examplePass";
+  const username = "exampleUser";
 
   before(function () {
     sinon
@@ -62,7 +63,7 @@ describe("My Board Game Shelf API - Users", function () {
       return chai
         .request(app)
         .post("/api/users")
-        .send({ username, password, name })
+        .send({ email, name, password, username })
         .then(_res => {
           res = _res;
           expect(res).to.have.status(201);
@@ -70,13 +71,15 @@ describe("My Board Game Shelf API - Users", function () {
           expect(res.body).to.have.keys(
             "admin",
             "createdAt",
-            "id",
+            "email",
             "games",
+            "id",
+            "name",
             "updatedAt",
-            "username",
-            "name"
+            "username"
           );
           expect(res.body.id).to.exist;
+          expect(res.body.email).to.equal(email.toLowerCase());
           expect(res.body.username).to.equal(username.toLowerCase());
           expect(res.body.name).to.equal(name);
           return User.findOne({ username });
@@ -84,8 +87,10 @@ describe("My Board Game Shelf API - Users", function () {
         .then(user => {
           expect(user).to.exist;
           expect(user.id).to.equal(res.body.id);
+          expect(user.email).to.equal(email.toLowerCase());
           expect(user.name).to.equal(name);
           expect(user.admin).to.equal(false);
+          expect(user.username).to.equal(username.toLowerCase());
           return user.validatePassword(password);
         })
         .then(isValid => {
@@ -97,7 +102,7 @@ describe("My Board Game Shelf API - Users", function () {
       return chai
         .request(app)
         .post("/api/users")
-        .send({ password, name })
+        .send({ email, name, password })
 
         .then(res => {
           expect(res).to.have.status(422);
@@ -111,13 +116,27 @@ describe("My Board Game Shelf API - Users", function () {
       return chai
         .request(app)
         .post("/api/users")
-        .send({ username, name })
+        .send({ email, name, username })
 
         .then(res => {
           expect(res).to.have.status(422);
           expect(res.body.reason).to.equal("ValidationError");
           expect(res.body.message).to.equal("Missing field");
           expect(res.body.location).to.equal("password");
+        });
+    });
+
+    it("should reject users with missing email", function () {
+      return chai
+        .request(app)
+        .post("/api/users")
+        .send({ name, password, username })
+
+        .then(res => {
+          expect(res).to.have.status(422);
+          expect(res.body.reason).to.equal("ValidationError");
+          expect(res.body.message).to.equal("Missing field");
+          expect(res.body.location).to.equal("email");
         });
     });
 
@@ -251,6 +270,7 @@ describe("My Board Game Shelf API - Users", function () {
 
     it("should reject users with a duplicate username", function () {
       return User.create({
+        email,
         username,
         password,
         name
@@ -259,13 +279,34 @@ describe("My Board Game Shelf API - Users", function () {
           return chai
             .request(app)
             .post("/api/users")
-            .send({ username, password, name });
+            .send({ email: 'alt@example.com', name, password, username });
         })
         .then(res => {
           expect(res).to.have.status(422);
           expect(res.body.reason).to.equal("ValidationError");
-          expect(res.body.message).to.equal("Username already taken");
+          expect(res.body.message).to.equal("username already exists");
           expect(res.body.location).to.equal("username");
+        });
+    });
+
+    it('should reject users with a duplicate email', function () {
+      return User.create({
+        email,
+        username,
+        password,
+        name
+      })
+        .then(() => {
+          return chai
+            .request(app)
+            .post("/api/users")
+            .send({ email, name, password, username: 'altusername' });
+        })
+        .then(res => {
+          expect(res).to.have.status(422);
+          expect(res.body.reason).to.equal("ValidationError");
+          expect(res.body.message).to.equal("email already exists");
+          expect(res.body.location).to.equal("email");
         });
     });
 
@@ -273,7 +314,7 @@ describe("My Board Game Shelf API - Users", function () {
       return chai
         .request(app)
         .post("/api/users")
-        .send({ username, password, name: ` ${name} ` })
+        .send({ email, password, username, name: ` ${name} ` })
         .then(res => {
           expect(res).to.have.status(201);
           expect(res.body).to.be.an("object");
@@ -286,12 +327,29 @@ describe("My Board Game Shelf API - Users", function () {
           expect(user.name).to.equal(name);
         });
     });
+
+    it('should reject users with an invalid email address', function () {
+      return chai
+        .request(app)
+        .post("/api/users")
+        .send({ email: 'invalid@email@test.com', name, password, username })
+
+        .then(res => {
+          expect(res).to.have.status(422);
+          expect(res.body.reason).to.equal("ValidationError");
+          expect(res.body.message).to.equal(
+            "Invalid email"
+          );
+          expect(res.body.location).to.equal("email");
+        });
+    });
   });
 
   describe("GET /api/users", function () {
     it("should return an array of users", function () {
-      const userOne = { username, password, name };
+      const userOne = { email, username, password, name };
       const userTwo = {
+        email: 'second-email@test.com',
         username: "secondUser",
         password: "examplePass2",
         name: "Second User"
@@ -314,6 +372,7 @@ describe("My Board Game Shelf API - Users", function () {
             expect(user).to.have.keys(
               "admin",
               "createdAt",
+              "email",
               "games",
               "id",
               "updatedAt",
@@ -339,7 +398,7 @@ describe("My Board Game Shelf API - Users", function () {
     it("should catch errors and respond properly", function () {
       sandbox.stub(User.schema.options.toJSON, "transform").throws("FakeError");
 
-      return User.create({ username, password, name })
+      return User.create({ email, username, password, name })
         .then(() => {
           return chai
             .request(app)
