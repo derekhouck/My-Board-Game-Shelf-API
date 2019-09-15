@@ -25,6 +25,31 @@ const createDigest = (req, res, next) => {
   }
 };
 
+const createDupKeyErr = err => {
+  const regex = /index\:\ (?:.*\.)?\$?(?:([_a-z0-9]*)(?:_\d*)|([_a-z0-9]*))\s*dup key/i,
+    match = err.message.match(regex),
+    indexName = match[1] || match[2];
+  err = new Error(`${indexName} already exists`);
+  err.status = 422;
+  err.reason = 'ValidationError';
+  err.location = indexName;
+  return err;
+}
+
+const validateEmail = (req, res, next) => {
+  const emailIsValid = email => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const { email } = req.body;
+  const invalidEmail = email && !emailIsValid(email);
+  if (invalidEmail) {
+    const err = new Error('Invalid email');
+    err.status = 422;
+    err.reason = 'ValidationError';
+    err.location = 'email';
+    return next(err);
+  }
+  return next();
+};
+
 const validateStringFields = (req, res, next) => {
   const stringFields = ['username', 'password', 'name'];
   const nonStringField = stringFields.find(
@@ -98,6 +123,7 @@ const validateFieldSizes = (req, res, next) => {
 
 // POST /api/users
 router.post('/',
+  validateEmail,
   validateStringFields,
   validateTrimmedFields,
   validateFieldSizes,
@@ -116,15 +142,6 @@ router.post('/',
 
     let { digest, email, name = '', username } = req.body;
 
-    const emailIsValid = email => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    if (!emailIsValid(email)) {
-      const err = new Error('Invalid email');
-      err.status = 422;
-      err.reason = 'ValidationError';
-      err.location = 'email';
-      return next(err);
-    }
-
     name = name.trim();
 
     return User
@@ -139,13 +156,7 @@ router.post('/',
       })
       .catch(err => {
         if (err.code === 11000) {
-          const regex = /index\:\ (?:.*\.)?\$?(?:([_a-z0-9]*)(?:_\d*)|([_a-z0-9]*))\s*dup key/i,
-            match = err.message.match(regex),
-            indexName = match[1] || match[2];
-          err = new Error(`${indexName} already exists`);
-          err.status = 422;
-          err.reason = 'ValidationError';
-          err.location = indexName;
+          err = createDupKeyErr(err);
         }
         next(err);
       });
@@ -230,6 +241,7 @@ router.get('/:id/games', jwtAuth, (req, res, next) => {
 router.put('/:id',
   jwtAuth,
   isValidId,
+  validateEmail,
   validateStringFields,
   validateTrimmedFields,
   validateFieldSizes,
@@ -238,7 +250,7 @@ router.put('/:id',
     const { id } = req.params;
 
     const toUpdate = {};
-    const updateableFields = ['admin', 'digest', 'name', 'username'];
+    const updateableFields = ['admin', 'digest', 'email', 'name', 'username'];
 
     updateableFields.forEach(field => {
       if (field in req.body) {
@@ -266,10 +278,7 @@ router.put('/:id',
       })
       .catch(err => {
         if (err.code === 11000) {
-          err = new Error('Username already taken');
-          err.status = 422;
-          err.reason = 'ValidationError';
-          err.location = 'username';
+          err = createDupKeyErr(err);
         }
         next(err);
       });

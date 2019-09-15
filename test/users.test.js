@@ -480,6 +480,25 @@ describe("My Board Game Shelf API - Users", function () {
   });
 
   describe("PUT /api/users", function () {
+    it("should update the user when provided a valid email", function () {
+      const updateData = { email: "updated@example.com" };
+      return chai
+        .request(app)
+        .put(`/api/users/${user.id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .send(updateData)
+        .then(res => {
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+          expect(res.body).to.be.an("object");
+          expect(res.body).to.include.keys("id", "email", "name", "username");
+          expect(res.body.id).to.equal(user.id);
+          expect(res.body.email).to.equal(updateData.email);
+          expect(res.body.name).to.equal(user.name);
+          expect(res.body.username).to.equal(user.username);
+        });
+    });
+
     it("should update the user when provided a valid name", function () {
       const updateData = { name: "Updated Name" };
       return chai
@@ -577,6 +596,22 @@ describe("My Board Game Shelf API - Users", function () {
         .send(updateData)
         .then(res => {
           expect(res).to.have.status(404);
+        });
+    });
+
+    it("should return an error with invalid email", function () {
+      return chai
+        .request(app)
+        .put(`/api/users/${user.id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({ email: 'invalid@email@test.com' })
+        .then(res => {
+          expect(res).to.have.status(422);
+          expect(res.body.reason).to.equal("ValidationError");
+          expect(res.body.message).to.equal(
+            "Invalid email"
+          );
+          expect(res.body.location).to.equal("email");
         });
     });
 
@@ -716,6 +751,20 @@ describe("My Board Game Shelf API - Users", function () {
         });
     });
 
+    it("should return an error with a duplicate email", function () {
+      return chai
+        .request(app)
+        .put(`/api/users/${user.id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({ email: admin.email })
+        .then(res => {
+          expect(res).to.have.status(422);
+          expect(res.body.reason).to.equal("ValidationError");
+          expect(res.body.message).to.equal("email already exists");
+          expect(res.body.location).to.equal("email");
+        });
+    });
+
     it("should return an error when username is already taken", function () {
       return User.find()
         .then(users => {
@@ -729,7 +778,7 @@ describe("My Board Game Shelf API - Users", function () {
         .then(res => {
           expect(res).to.have.status(422);
           expect(res.body.reason).to.equal("ValidationError");
-          expect(res.body.message).to.equal("Username already taken");
+          expect(res.body.message).to.equal("username already exists");
           expect(res.body.location).to.equal("username");
         });
     });
