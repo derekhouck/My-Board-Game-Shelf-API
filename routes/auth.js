@@ -35,6 +35,7 @@ router.post('/hard-refresh', jwtAuth, (req, res, next) => {
   return User.find({ _id: req.user.id })
     .then(([user]) => {
       const authToken = createAuthToken({
+        email: user.email,
         id: user.id,
         name: user.name,
         username: user.username
