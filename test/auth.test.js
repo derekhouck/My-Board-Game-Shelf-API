@@ -46,7 +46,25 @@ describe('My Board Game Shelf API - Authentication', function () {
   });
 
   describe('POST /api/login', function () {
-    it('should return a valid auth token', function () {
+    it('should return an auth token with valid email', function () {
+      return chai.request(app)
+        .post('/api/login')
+        .send({ username: email, password })
+        .then(res => {
+          expect(res).to.have.status(200);
+          expect(res.body).to.be.an('object');
+          expect(res.body.authToken).to.be.a('string');
+
+          const payload = jwt.verify(res.body.authToken, JWT_SECRET);
+
+          expect(payload.user).to.not.have.property('password');
+          expect(payload.user.email).to.equal(email);
+          expect(payload.user.id).to.equal(_id);
+          expect(payload.user.username).to.deep.equal(username.toLowerCase());
+        });
+    });
+
+    it('should return an auth token with valid username', function () {
       return chai.request(app)
         .post('/api/login')
         .send({ username, password })
@@ -200,7 +218,7 @@ describe('My Board Game Shelf API - Authentication', function () {
     });
 
     it('should return a valid auth token with user data that matches the database', function () {
-      const user = { username, name, id: _id };
+      const user = { email, username, name, id: _id };
       const token = jwt.sign({ user }, JWT_SECRET, { subject: username, expiresIn: '1m' });
       const decoded = jwt.decode(token);
       const newname = 'Updated Name';
@@ -220,6 +238,7 @@ describe('My Board Game Shelf API - Authentication', function () {
 
           const payload = jwt.verify(authToken, JWT_SECRET);
           expect(payload.user).to.deep.equal({
+            email: email.toLowerCase(),
             id: _id,
             username: username.toLowerCase(),
             name: newname
