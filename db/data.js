@@ -133,38 +133,47 @@ const games = [
 const tags = [
   {
     _id: "222222222222222222222201",
+    category: 'Mechanics',
     name: "deck-building"
   },
   {
     _id: "222222222222222222222203",
+    category: 'Mechanics',
     name: "dice"
   },
   {
     _id: "222222222222222222222205",
+    category: 'Mechanics',
     name: "cards"
   },
   {
     _id: "222222222222222222222207",
+    category: 'Themes',
     name: "kid-friendly"
   },
   {
     _id: "222222222222222222222209",
+    category: 'Mechanics',
     name: "collectible card game"
   },
   {
     _id: "222222222222222222222202",
+    category: 'Themes',
     name: "European"
   },
   {
     _id: "222222222222222222222204",
+    category: 'Mechanics',
     name: "resource management"
   },
   {
     _id: "222222222222222222222206",
+    category: 'Mechanics',
     name: "social deduction"
   },
   {
     _id: "222222222222222222222208",
+    category: 'Themes',
     name: "educational"
   }
 ];

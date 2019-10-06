@@ -1,23 +1,9 @@
-'use strict';
-
 const express = require('express');
 
 const Game = require('../models/game');
 const Tag = require('../models/tag');
 
-const { isValidId } = require('./validators');
-
-const missingName = (req, res, next) => {
-  const { name } = req.body;
-
-  if (!name) {
-    const err = new Error('Missing `name` in request body');
-    err.status = 400;
-    return next(err);
-  } else {
-    next();
-  }
-};
+const { isValidId, requiredFields } = require('./validators');
 
 const router = express.Router();
 
@@ -40,28 +26,42 @@ router.get('/:id', isValidId, (req, res, next) => {
 });
 
 // POST /api/tags
-router.post('/', missingName, (req, res, next) => {
-  const { name } = req.body;
+router.post('/',
+  requiredFields(['category', 'name']),
+  (req, res, next) => {
+    const { category, name } = req.body;
 
-  const newTag = { name };
+    const newTag = { category, name };
 
-  Tag.create(newTag)
-    .then(result => {
-      res.location(`${req.originalUrl}/${result.id}`).status(201).json(result);
-    })
-    .catch(err => {
-      if (err.code === 11000) {
-        err = new Error('Tag name already exists');
-        err.status = 400;
+    if (category) {
+      switch (category) {
+        case 'Mechanics':
+        case 'Themes':
+          break;
+        default:
+          const err = new Error('Category is not valid');
+          err.status = 400;
+          return next(err);
       }
-      next(err);
-    });
-});
+    }
+
+    Tag.create(newTag)
+      .then(result => {
+        res.location(`${req.originalUrl}/${result.id}`).status(201).json(result);
+      })
+      .catch(err => {
+        if (err.code === 11000) {
+          err = new Error('Tag name already exists');
+          err.status = 400;
+        }
+        next(err);
+      });
+  });
 
 //PUT /api/tags/:id
 router.put('/:id',
   isValidId,
-  missingName,
+  requiredFields('name'),
   (req, res, next) => {
     const { id } = req.params;
     const { name } = req.body;

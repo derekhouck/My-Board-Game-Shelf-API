@@ -77,7 +77,7 @@ describe('My Board Game Shelf API - Tags', function () {
           expect(res.body).to.have.length(data.length);
           res.body.forEach(function (item, i) {
             expect(item).to.be.a('object');
-            expect(item).to.have.all.keys('id', 'name', 'createdAt', 'updatedAt');
+            expect(item).to.have.all.keys('id', 'category', 'name', 'createdAt', 'updatedAt');
             expect(item.id).to.equal(data[i].id);
             expect(item.name).to.equal(data[i].name);
             expect(new Date(item.createdAt)).to.eql(data[i].createdAt);
@@ -115,7 +115,7 @@ describe('My Board Game Shelf API - Tags', function () {
           expect(res).to.have.status(200);
           expect(res).to.be.json;
           expect(res.body).to.be.an('object');
-          expect(res.body).to.have.keys('id', 'name', 'createdAt', 'updatedAt');
+          expect(res.body).to.have.keys('id', 'category', 'name', 'createdAt', 'updatedAt');
           expect(res.body.id).to.equal(data.id);
           expect(res.body.name).to.equal(data.name);
           expect(new Date(res.body.createdAt)).to.eql(data.createdAt);
@@ -163,7 +163,10 @@ describe('My Board Game Shelf API - Tags', function () {
 
   describe('POST /api/tags', function () {
     it('should create and return a new item when provided valid data', function () {
-      const newItem = { name: 'newTag' };
+      const newItem = {
+        category: 'Mechanics',
+        name: 'newTag'
+      };
       let body;
       return chai.request(app)
         .post('/api/tags')
@@ -175,7 +178,7 @@ describe('My Board Game Shelf API - Tags', function () {
           expect(res).to.have.header('location');
           expect(res).to.be.json;
           expect(body).to.be.a('object');
-          expect(body).to.have.keys('id', 'name', 'createdAt', 'updatedAt');
+          expect(body).to.have.keys('category', 'id', 'name', 'createdAt', 'updatedAt');
           return Tag.findOne({ _id: body.id });
         })
         .then(data => {
@@ -187,7 +190,9 @@ describe('My Board Game Shelf API - Tags', function () {
     });
 
     it('should return an error when missing "name" field', function () {
-      const newItem = {};
+      const newItem = {
+        category: 'Mechanics'
+      };
       return chai.request(app)
         .post('/api/tags')
         .set('Authorization', `Bearer ${token}`)
@@ -196,12 +201,31 @@ describe('My Board Game Shelf API - Tags', function () {
           expect(res).to.have.status(400);
           expect(res).to.be.json;
           expect(res.body).to.be.a('object');
-          expect(res.body.message).to.equal('Missing `name` in request body');
+          expect(res.body.message).to.equal('Missing name in request body');
+        });
+    });
+
+    it('should return an error when missing "category" field', function () {
+      const newTag = {
+        name: 'newTag'
+      };
+      return chai.request(app)
+        .post('/api/tags')
+        .set('Authorization', `Bearer ${token}`)
+        .send(newTag)
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('Missing category in request body');
         });
     });
 
     it('should return an error when "name" field is empty string', function () {
-      const newItem = { name: '' };
+      const newItem = {
+        category: 'Mechanics',
+        name: ''
+      };
       return chai.request(app)
 
         .post('/api/tags')
@@ -211,14 +235,17 @@ describe('My Board Game Shelf API - Tags', function () {
           expect(res).to.have.status(400);
           expect(res).to.be.json;
           expect(res.body).to.be.a('object');
-          expect(res.body.message).to.equal('Missing `name` in request body');
+          expect(res.body.message).to.equal('Missing name in request body');
         });
     });
 
     it('should return an error when given a duplicate name', function () {
       return Tag.findOne()
         .then(data => {
-          const newItem = { name: data.name };
+          const newItem = {
+            category: data.category,
+            name: data.name
+          };
           return chai.request(app)
             .post('/api/tags')
             .set('Authorization', `Bearer ${token}`)
@@ -232,10 +259,30 @@ describe('My Board Game Shelf API - Tags', function () {
         });
     });
 
+    it('should reject invalid categories', function () {
+      const newTag = {
+        category: 'INVALID-TAG',
+        name: 'newTag'
+      };
+      return chai.request(app)
+        .post('/api/tags')
+        .set('Authorization', `Bearer ${token}`)
+        .send(newTag)
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('Category is not valid');
+        });
+    })
+
     it('should catch errors and respond properly', function () {
       sandbox.stub(Tag.schema.options.toJSON, 'transform').throws('FakeError');
 
-      const newItem = { name: 'newTag' };
+      const newItem = {
+        category: 'Mechanics',
+        name: 'newTag'
+      };
       return chai.request(app)
         .post('/api/tags')
         .set('Authorization', `Bearer ${token}`)
@@ -265,7 +312,7 @@ describe('My Board Game Shelf API - Tags', function () {
           expect(res).to.have.status(200);
           expect(res).to.be.json;
           expect(res.body).to.be.a('object');
-          expect(res.body).to.have.keys('id', 'name', 'createdAt', 'updatedAt');
+          expect(res.body).to.have.keys('id', 'category', 'name', 'createdAt', 'updatedAt');
           expect(res.body.id).to.equal(data.id);
           expect(res.body.name).to.equal(updateItem.name);
           expect(new Date(res.body.createdAt)).to.eql(data.createdAt);
@@ -314,7 +361,7 @@ describe('My Board Game Shelf API - Tags', function () {
           expect(res).to.have.status(400);
           expect(res).to.be.json;
           expect(res.body).to.be.a('object');
-          expect(res.body.message).to.equal('Missing `name` in request body');
+          expect(res.body.message).to.equal('Missing name in request body');
         });
     });
 
@@ -333,7 +380,7 @@ describe('My Board Game Shelf API - Tags', function () {
           expect(res).to.have.status(400);
           expect(res).to.be.json;
           expect(res.body).to.be.a('object');
-          expect(res.body.message).to.equal('Missing `name` in request body');
+          expect(res.body.message).to.equal('Missing name in request body');
         });
     });
 

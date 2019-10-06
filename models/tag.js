@@ -3,6 +3,7 @@
 const mongoose = require('mongoose');
 
 const schema = new mongoose.Schema({
+  category: { type: String, enum: ['Mechanics', 'Themes'], required: true },
   name: { type: String, unique: true },
 });
 
