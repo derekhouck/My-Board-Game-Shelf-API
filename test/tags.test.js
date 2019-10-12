@@ -298,7 +298,10 @@ describe('My Board Game Shelf API - Tags', function () {
 
   describe('PUT /api/tags/:id', function () {
     it('should update the tag', function () {
-      const updateItem = { name: 'Updated Name' };
+      const updateItem = {
+        category: 'Mechanics',
+        name: 'Updated Name'
+      };
       let data;
       return Tag.findOne()
         .then(_data => {
@@ -335,7 +338,10 @@ describe('My Board Game Shelf API - Tags', function () {
     });
 
     it('should respond with a 404 for an id that does not exist', function () {
-      const updateItem = { name: 'Blah' };
+      const updateItem = {
+        category: 'Mechanics',
+        name: 'Blah'
+      };
       // The string "DOESNOTEXIST" is 12 bytes which is a valid Mongo ObjectId
       return chai.request(app)
         .put('/api/tags/DOESNOTEXIST')
@@ -347,7 +353,9 @@ describe('My Board Game Shelf API - Tags', function () {
     });
 
     it('should return an error when missing "name" field', function () {
-      const updateItem = {};
+      const updateItem = {
+        category: "Mechanics"
+      };
       let data;
       return Tag.findOne()
         .then(_data => {
@@ -365,8 +373,29 @@ describe('My Board Game Shelf API - Tags', function () {
         });
     });
 
+    it('should return an error when missing "category" field', function () {
+      const updatedTag = {
+        name: 'Updated name'
+      };
+      return Tag.findOne()
+        .then(tag =>
+          chai.request(app)
+            .put(`/api/tags/${tag.id}`)
+            .set('Authorization', `Bearer ${token}`)
+            .send(updatedTag)
+        )
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res.body).to.be.an('object');
+          expect(res.body.message).to.equal('Missing category in request body');
+        });
+    });
+
     it('should return an error when "name" field is empty string', function () {
-      const updateItem = { name: '' };
+      const updateItem = {
+        category: "Mechanics",
+        name: ''
+      };
       let data;
       return Tag.findOne()
         .then(_data => {
@@ -402,10 +431,32 @@ describe('My Board Game Shelf API - Tags', function () {
         });
     });
 
+    it('should reject invalid categories', function () {
+      const updatedTag = {
+        category: 'INVALID-TAG',
+        name: 'Updated Tag'
+      };
+      return Tag.findOne()
+        .then(tag =>
+          chai.request(app)
+            .put(`/api/tags/${tag.id}`)
+            .set('Authorization', `Bearer ${token}`)
+            .send(updatedTag)
+        )
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res.body).to.be.an('object');
+          expect(res.body.message).to.equal('Category is not valid');
+        });
+    });
+
     it('should catch errors and respond properly', function () {
       sandbox.stub(Tag.schema.options.toJSON, 'transform').throws('FakeError');
 
-      const updateItem = { name: 'Updated Name' };
+      const updateItem = {
+        category: "Mechanics",
+        name: 'Updated Name'
+      };
       return Tag.findOne()
         .then(data => {
           return chai.request(app)

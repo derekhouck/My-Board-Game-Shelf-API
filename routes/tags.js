@@ -7,6 +7,22 @@ const { isValidId, requiredFields } = require('./validators');
 
 const router = express.Router();
 
+const isValidCategory = (req, res, next) => {
+  const { category } = req.body;
+  if (category) {
+    switch (category) {
+      case 'Mechanics':
+      case 'Themes':
+        return next();
+      default:
+        const err = new Error('Category is not valid');
+        err.status = 400;
+        return next(err);
+    }
+  }
+  return next();
+};
+
 // GET /api/tags
 router.get('/', (req, res, next) => {
 
@@ -28,22 +44,11 @@ router.get('/:id', isValidId, (req, res, next) => {
 // POST /api/tags
 router.post('/',
   requiredFields(['category', 'name']),
+  isValidCategory,
   (req, res, next) => {
     const { category, name } = req.body;
 
     const newTag = { category, name };
-
-    if (category) {
-      switch (category) {
-        case 'Mechanics':
-        case 'Themes':
-          break;
-        default:
-          const err = new Error('Category is not valid');
-          err.status = 400;
-          return next(err);
-      }
-    }
 
     Tag.create(newTag)
       .then(result => {
@@ -61,7 +66,8 @@ router.post('/',
 //PUT /api/tags/:id
 router.put('/:id',
   isValidId,
-  requiredFields('name'),
+  requiredFields(['category', 'name']),
+  isValidCategory,
   (req, res, next) => {
     const { id } = req.params;
     const { name } = req.body;
