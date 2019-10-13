@@ -297,9 +297,9 @@ describe('My Board Game Shelf API - Tags', function () {
   });
 
   describe('PUT /api/tags/:id', function () {
-    it('should update the tag', function () {
+    it.only('should update the tag', function () {
       const updateItem = {
-        category: 'Mechanics',
+        category: 'Themes',
         name: 'Updated Name'
       };
       let data;
@@ -318,6 +318,7 @@ describe('My Board Game Shelf API - Tags', function () {
           expect(res.body).to.have.keys('id', 'category', 'name', 'createdAt', 'updatedAt');
           expect(res.body.id).to.equal(data.id);
           expect(res.body.name).to.equal(updateItem.name);
+          expect(res.body.category).to.equal(updateItem.category);
           expect(new Date(res.body.createdAt)).to.eql(data.createdAt);
           // expect item to have been updated
           expect(new Date(res.body.updatedAt)).to.greaterThan(data.updatedAt);

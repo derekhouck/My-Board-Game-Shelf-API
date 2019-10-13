@@ -70,9 +70,9 @@ router.put('/:id',
   isValidCategory,
   (req, res, next) => {
     const { id } = req.params;
-    const { name } = req.body;
+    const { category, name } = req.body;
 
-    const updateTag = { name };
+    const updateTag = { category, name };
 
     Tag.findOneAndUpdate({ _id: id }, updateTag, { new: true })
       .then(result => {
