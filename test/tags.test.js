@@ -297,7 +297,7 @@ describe('My Board Game Shelf API - Tags', function () {
   });
 
   describe('PUT /api/tags/:id', function () {
-    it.only('should update the tag', function () {
+    it('should update the tag', function () {
       const updateItem = {
         category: 'Themes',
         name: 'Updated Name'

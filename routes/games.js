@@ -108,7 +108,7 @@ router.get('/', (req, res, next) => {
 });
 
 // GET /api/games/:id
-router.get('/:id', jwtAuth, isValidId, (req, res, next) => {
+router.get('/:id', isValidId, (req, res, next) => {
   const { id } = req.params;
 
   Game.findById(id)

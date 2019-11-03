@@ -217,8 +217,7 @@ describe('My Board Game Shelf API - Games', function () {
         .then(_data => {
           data = _data;
           return chai.request(app)
-            .get(`/api/games/${data.id}`)
-            .set('Authorization', `Bearer ${token}`);
+            .get(`/api/games/${data.id}`);
         })
         .then((res) => {
           expect(res).to.have.status(200);
