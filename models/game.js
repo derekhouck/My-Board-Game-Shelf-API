@@ -7,6 +7,7 @@ const schema = new mongoose.Schema({
     min: Number,
     max: Number
   },
+  shelves: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   status: {
     type: String, default: 'pending', enum: ['approved', 'pending', 'rejected']
   },

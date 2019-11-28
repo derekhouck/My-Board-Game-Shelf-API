@@ -73,7 +73,7 @@ describe('My Board Game Shelf API - Games', function () {
             expect(item).to.be.a('object');
             // Note: folderId, tags and content are optional
             expect(item).to.have.all.keys(
-              'id', 'status', 'title', 'createdAt', 'players', 'tags', 'updatedAt'
+              'createdAt', 'id', 'shelves', 'status', 'title', 'players', 'tags', 'updatedAt'
             );
             expect(item.id).to.equal(data[i].id);
             expect(item.title).to.equal(data[i].title);

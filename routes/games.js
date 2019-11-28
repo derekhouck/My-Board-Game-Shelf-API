@@ -13,6 +13,7 @@ const {
 const jwtAuth = passport.authenticate('jwt', { session: false, failWithError: true });
 const router = express.Router();
 
+const gameFields = 'createdAt players status tags title updatedAt';
 const validatePlayers = (req, res, next) => {
   const { minPlayers, maxPlayers } = req.body;
   const fields = ['minPlayers', 'maxPlayers'];
@@ -42,7 +43,6 @@ const validatePlayers = (req, res, next) => {
 
   return next();
 };
-
 const validateTagIds = tags => {
   if (tags === undefined) {
     return Promise.resolve();
@@ -100,7 +100,7 @@ router.get('/', (req, res, next) => {
     filter.tags = tagId;
   }
 
-  Game.find(filter)
+  Game.find(filter, gameFields)
     .populate('tags')
     .sort({ title: 'asc' })
     .then(results => res.json(results))
@@ -111,7 +111,7 @@ router.get('/', (req, res, next) => {
 router.get('/:id', isValidId, (req, res, next) => {
   const { id } = req.params;
 
-  Game.findById(id)
+  Game.findById(id, gameFields)
     .populate('tags')
     .then(result => {
       if (result) {

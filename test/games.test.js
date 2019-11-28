@@ -287,7 +287,7 @@ describe('My Board Game Shelf API - Games', function () {
           expect(res).to.have.header('location');
           expect(res).to.be.json;
           expect(res.body).to.be.a('object');
-          expect(res.body).to.have.all.keys('id', 'status', 'title', 'createdAt', 'updatedAt', 'tags');
+          expect(res.body).to.have.all.keys('id', 'shelves', 'status', 'title', 'createdAt', 'updatedAt', 'tags');
           expect(res.body.status).to.equal('pending');
           return Game.findById(res.body.id);
         })
