@@ -1,6 +1,5 @@
-'use strict';
-
 const mongoose = require('mongoose');
+const User = require('./user');
 
 const schema = new mongoose.Schema({
   players: {
@@ -13,6 +12,14 @@ const schema = new mongoose.Schema({
   },
   tags: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tag' }],
   title: { type: String, required: true },
+});
+
+schema.method('updateShelves', function () {
+  return User.find({ games: this['_id'] })
+    .then(users => {
+      this.shelves = users.map(user => user.id);
+      return this.save();
+    })
 });
 
 // Add `createdAt` and `updatedAt` fields

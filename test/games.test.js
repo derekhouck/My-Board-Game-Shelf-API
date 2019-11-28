@@ -48,6 +48,25 @@ describe('My Board Game Shelf API - Games', function () {
 
   after(() => dbDisconnect());
 
+  describe('Model tests', function () {
+    it('should update the shelves array', function () {
+      let game;
+      return Game.findOne()
+        .then(_game => {
+          game = _game;
+          return game.updateShelves()
+        })
+        .then(() => Promise.all([
+          User.find({ games: game.id }),
+          Game.findById(game.id)
+        ]))
+        .then(([users, updatedGame]) => {
+          expect(updatedGame.shelves).to.be.an('array');
+          expect(updatedGame.shelves.length).to.equal(users.length);
+        });
+    });
+  })
+
   describe('GET /api/games', function () {
     it('should return the correct number of Games', function () {
       return Promise.all([

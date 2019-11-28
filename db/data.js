@@ -1,5 +1,13 @@
-// User #1 = odd numbers
-// User #2 = even numbers
+const randomGamesArray = (games) => {
+  const gameIds = games.map(game => game['_id']);
+  const arr = [];
+  for (let i = 0; i < 3; i++) {
+    const index = Math.floor(Math.random() * gameIds.length);
+    arr.push(gameIds[index]);
+    gameIds.splice(index, 1); // prevent duplicates
+  }
+  return arr;
+};
 
 const users = [
   {
@@ -177,5 +185,16 @@ const tags = [
     name: "educational"
   }
 ];
+
+for (let i = 1; i <= 50; i++) {
+  users.push({
+    _id: i.to_s,
+    email: `test-${i}@example.com`,
+    games: randomGamesArray(games),
+    name: `Test User ${i}`,
+    password: "$2a$10$vXjjefbggXMi5S9130.Zu.AMcQoh2TqikDOmKn/7B6hpW6l8gX56W", // "baseball"
+    username: `testuser${i}`,
+  })
+}
 
 module.exports = { users, games, tags };

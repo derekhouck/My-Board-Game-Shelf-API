@@ -16,7 +16,7 @@ chai.use(chaiHttp);
 const expect = chai.expect;
 const sandbox = sinon.createSandbox();
 
-describe('My Board Game Shelf API - Games', function () {
+describe('My Board Game Shelf API - Admin', function () {
   before(() => dbConnect(TEST_DATABASE_URL));
 
   beforeEach(() =>
