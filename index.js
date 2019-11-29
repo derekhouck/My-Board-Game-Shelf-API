@@ -7,7 +7,7 @@ const passport = require('passport');
 
 const { PORT, CORS_WHITELIST, REDIS_URL } = require('./config');
 const { dbConnect } = require('./db-mongoose');
-const { UPDATE_SHELVES } = require('./queues');
+const { UPDATE_SHELVES, createQueues } = require('./queues');
 const localStrategy = require('./passport/local');
 const jwtStrategy = require('./passport/jwt');
 
@@ -46,7 +46,6 @@ passport.use(jwtStrategy);
 
 // Protect endpoints using JWT Strategy
 const jwtAuth = passport.authenticate('jwt', { session: false, failWithError: true });
-const localAuth = passport.authenticate('local', { session: false, failWithError: true });
 
 // Queues GUI
 app.use('/arena', Arena(
@@ -112,6 +111,7 @@ function runServer(port = PORT) {
 if (require.main === module) {
   dbConnect();
   runServer();
+  createQueues();
 }
 
 module.exports = app;

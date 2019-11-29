@@ -3,9 +3,7 @@ module.exports = {
   CORS_WHITELIST: [
     'https://myboardgameshelf.com',
     'https://gallant-minsky-655cfc.netlify.com',
-    'https://my-board-game-shelf-api.herokuapp.com',
     'http://localhost:3000',
-    'http://localhost:8080'
   ],
   DATABASE_URL: process.env.DATABASE_URL || 'mongodb://localhost/my-board-game-shelf-api',
   TEST_DATABASE_URL: process.env.TEST_DATABASE_URL || 'mongodb://localhost/my-board-game-shelf-api-test',
