@@ -1,11 +1,13 @@
 require('dotenv').config();
+const Arena = require('bull-arena');
+const cors = require('cors');
 const express = require('express');
 const morgan = require('morgan');
 const passport = require('passport');
-const cors = require('cors');
 
-const { PORT, CORS_WHITELIST } = require('./config');
+const { PORT, CORS_WHITELIST, REDIS_URL } = require('./config');
 const { dbConnect } = require('./db-mongoose');
+const { UPDATE_SHELVES } = require('./queues');
 const localStrategy = require('./passport/local');
 const jwtStrategy = require('./passport/jwt');
 
@@ -24,6 +26,7 @@ app.use(
   })
 );
 
+
 app.use(
   cors({
     origin: function (origin, callback) {
@@ -36,10 +39,6 @@ app.use(
   })
 );
 
-app.use(express.static('public'));
-
-// Parse request body
-app.use(express.json());
 
 // Utilize the given `strategy`
 passport.use(localStrategy);
@@ -47,6 +46,29 @@ passport.use(jwtStrategy);
 
 // Protect endpoints using JWT Strategy
 const jwtAuth = passport.authenticate('jwt', { session: false, failWithError: true });
+const localAuth = passport.authenticate('local', { session: false, failWithError: true });
+
+// Queues GUI
+app.use('/arena', Arena(
+  {
+    queues: [
+      {
+        name: UPDATE_SHELVES,
+        hostId: 'Games',
+        redis: REDIS_URL
+      }
+    ]
+  },
+  {
+    basePath: '/',
+    disableListen: true
+  }
+));
+
+app.use(express.static('public'));
+
+// Parse request body
+app.use(express.json());
 
 // Mount routers
 app.use('/api/admin', jwtAuth, requiresAdmin, adminRouter);
